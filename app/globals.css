@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Tokens (ui_planning.md §2) ---------- */
+:root {
+  --paper: #fff; --ink: #1f1a17; --ink-2: #4a4340; --muted: #6b6461; --faint: #9a918d;
+  --tomato: #c2392d; --tomato-2: #d9473a; --tomato-dark: #9e2a20; --blush: #fdecea; --rule: #ebcfcb;
+  --grid: #f3e6e3; --sticky: #fff3a8; --high: #ffe58a; --good: #2e7d32; --panel: #faf6f5;
+  --wa: 255px 15px 225px 15px/15px 225px 15px 255px;
+  --wb: 15px 255px 15px 225px/225px 15px 255px 15px;
+  --wc: 225px 25px 205px 20px/20px 205px 25px 225px;
+  --pop: cubic-bezier(.3, 1.4, .5, 1);
+  --cut: 4px 5px 0 #f6d9d5;
+  --font: var(--font-my);
+  color-scheme: light;
+}
+
+/* ---------- One font, everywhere (§1) ---------- */
+html { font-size: 24px; }
+@media (max-width: 900px) { html { font-size: 20px; } }
+html, body, button, input, textarea, select, svg text { font-family: var(--font) !important; }
+* { font-synthesis: none; font-weight: 400 !important; }
+body {
+  background: var(--paper); color: var(--ink); line-height: 1.25;
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+:focus-visible { outline: 3px solid var(--tomato-2); outline-offset: 2px; }
+button { cursor: pointer; }
+::selection { background: var(--high); }
+
+/* ---------- Paper ---------- */
+.grid-paper {
+  background-color: #fff;
+  background-image:
+    linear-gradient(var(--grid) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, var(--grid) 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
+}
+.wa { border-radius: var(--wa); }
+.wb { border-radius: var(--wb); }
+.wc { border-radius: var(--wc); }
+.hand { border: 2.5px solid var(--ink); background-color: #fff; }
+.cut { box-shadow: var(--cut); }
+.divider { border-bottom: 1.5px dashed var(--rule); }
+.stroke-text { -webkit-text-stroke: .6px currentColor; }
+.sticky {
+  background: var(--sticky); color: var(--ink); padding: .35em .7em;
+  box-shadow: 2px 3px 0 rgba(0,0,0,.08); transform: rotate(-1deg);
+}
+.red-note { color: var(--tomato); }
+.hl { background: linear-gradient(var(--high), var(--high)) no-repeat 0 60% / 0% 70%; animation: highlighter .5s .2s ease-out forwards; }
+
+/* ---------- Buttons (§3.2) ---------- */
+.btn {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: inline-flex; align-items: center; justify-content: center; gap: .35em;
+  min-height: 44px; min-width: 44px; padding: .15em .8em;
+  font-size: 1.15rem; line-height: 1.1; color: var(--ink); background: #fff;
+  border: 2.5px solid var(--ink); border-radius: var(--wb);
+  transition: transform 220ms var(--pop), border-radius 220ms ease, box-shadow 220ms ease;
+  user-select: none; touch-action: manipulation;
+}
+@media (hover: hover) { .btn:hover:not([aria-disabled="true"]) { border-radius: var(--wa); } }
+.btn.pressed { transform: scale(.96) rotate(var(--tilt, .6deg)); transition-duration: 90ms; }
+.btn-red { background: var(--tomato); color: #fff; border-color: var(--tomato-dark); }
+.btn-red::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: var(--tomato-dark);
+  transform: scaleX(0); transform-origin: left; transition: transform 180ms ease-out;
+}
+.btn-red.pressed::before { transform: scaleX(1); }
+.btn-pink { background: var(--blush); border-color: var(--tomato); color: var(--tomato); }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn[aria-disabled="true"] {
+  opacity: .45; cursor: not-allowed;
+  background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgba(31,26,23,.12) 6px 7.5px);
+}
+.link { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; background: none; border: 0; padding: 0; color: inherit; }
+
+/* ---------- Toast ---------- */
+.toast-host { position: fixed; left: 0; right: 0; bottom: 28px; display: flex; justify-content: center; pointer-events: none; z-index: 100; }
+.toast { pointer-events: auto; font-size: 1rem; padding: .45em 1em; animation: drop-in 320ms var(--pop) both; touch-action: none; }
+
+/* ---------- Cards ---------- */
+.card {
+  position: relative; text-align: left;
+  padding: .9rem 1.1rem; border: 2.5px solid var(--ink); background-color: #fff;
+  transition: transform 220ms var(--pop), box-shadow 220ms ease;
+  animation: deal-in 420ms var(--pop) both;
+}
+@media (hover: hover) { .card:hover { transform: translateY(-4px) rotate(-.4deg); box-shadow: 6px 9px 0 #f6d9d5; } }
+.card.pressed { transform: scale(.98) rotate(var(--tilt, .6deg)); }
+
+/* ---------- Menu ---------- */
+.menu { transform-origin: top right; animation: unfold 220ms var(--pop) both; }
+.menu > * { animation: pop-in 220ms var(--pop) both; }
+
+/* ---------- Tabs (§3.7) ---------- */
+.tab-underline { position: absolute; bottom: -2px; height: 4px; background: var(--tomato); border-radius: 4px; transition: transform 220ms var(--pop), width 220ms var(--pop); }
+
+/* ---------- Ink ---------- */
+.ink-lift { animation: lift-off 220ms ease-in forwards; }
+.ink-fade { animation: fade-out 120ms ease-in forwards; }
+.board-enter { animation: board-in 320ms var(--pop) both; }
+.page-turn { animation: page-turn 500ms ease-in-out both; transform-origin: left center; }
+
+/* ---------- Red pen (§3.5) ---------- */
+.draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw var(--dur, 550ms) var(--delay, 0ms) cubic-bezier(.4,.1,.3,1) forwards; }
+.bleed { animation: bleed 150ms var(--delay, 550ms) ease-out forwards; }
+.write-in { clip-path: inset(-20% 100% -20% 0); animation: write-in var(--dur, 600ms) var(--delay, 0ms) steps(var(--steps, 20), end) forwards; }
+.thinking-border { stroke-dasharray: 14 10; animation: march 1.2s linear infinite; }
+.sticky-drop { animation: sticky-drop 420ms var(--pop) both; }
+.slide-in { animation: slide-in 420ms var(--pop) both; }
+.solution {
+  background:
+    linear-gradient(90deg, transparent 38px, #f1a9a0 38px, #f1a9a0 40px, transparent 40px),
+    repeating-linear-gradient(#fff 0 31px, #cfe0f5 31px 32px);
+  line-height: 32px; padding: 6px 14px 10px 52px; transform: rotate(1deg);
+}
+
+/* ---------- Tomato ---------- */
+.tomato { overflow: visible; touch-action: none; }
+.tomato .breathe { transform-origin: 50% 90%; animation: breathe 3s ease-in-out infinite; }
+.tomato .eyes { transform-origin: 50% 52%; animation: blink var(--blink, 5s) infinite; }
+.tomato .r-squish { animation: squish 450ms var(--pop); }
+.tomato .r-jump { animation: jump 600ms var(--pop); }
+.tomato .r-flinch { animation: flinch 500ms ease-out; }
+.tomato .r-rot { animation: droop 900ms ease-out; }
+.tomato .r-lean { animation: lean 1.4s ease-in-out infinite; }
+.tomato .fly { animation: orbit 2.4s linear infinite; transform-origin: 50px 50px; }
+.tomato .sweat { animation: sweat 900ms ease-in both; }
+.bubble { animation: pop-in 260ms var(--pop) both; }
+
+/* ---------- Keyframes ---------- */
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes bleed { from { stroke-width: 2.5; } to { stroke-width: 3; } }
+@keyframes write-in { to { clip-path: inset(-20% -5% -20% 0); } }
+@keyframes march { to { stroke-dashoffset: -48; } }
+@keyframes highlighter { to { background-size: 100% 70%; } }
+@keyframes drop-in { from { opacity: 0; transform: translateY(-24px) rotate(-1deg); } to { opacity: 1; transform: translateY(0) rotate(-1deg); } }
+@keyframes sticky-drop { from { opacity: 0; transform: translateY(-20px) rotate(-4deg); } to { opacity: 1; transform: translateY(0) rotate(2deg); } }
+@keyframes deal-in { from { opacity: 0; transform: translate(-30px, 40px) rotate(-6deg); } to { opacity: 1; transform: none; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+@keyframes unfold { from { opacity: 0; transform: scaleY(.2); } to { opacity: 1; transform: scaleY(1); } }
+@keyframes slide-in { from { opacity: 0; transform: translateX(40px) rotate(3deg); } to { opacity: 1; transform: rotate(1deg); } }
+@keyframes lift-off { to { opacity: 0; transform: translateY(-4px); } }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes board-in { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+@keyframes page-turn { 0% { transform: perspective(1400px) rotateY(0); } 50% { transform: perspective(1400px) rotateY(-80deg); opacity: .4; } 100% { transform: perspective(1400px) rotateY(0); } }
+@keyframes fly-up { to { opacity: 0; transform: translateY(-120%) rotate(-8deg); } }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02, 1.025); } }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+@keyframes squish { 0% { transform: scale(1); } 30% { transform: scale(1.1, .85); } 60% { transform: scale(.95, 1.06); } 100% { transform: scale(1); } }
+@keyframes jump { 0% { transform: none; } 15% { transform: scale(1.05, .9); } 45% { transform: translateY(-18px) scale(.95, 1.06); } 80% { transform: scale(1.08, .9); } 100% { transform: none; } }
+@keyframes flinch { 0% { transform: none; } 20% { transform: translateX(-6px) rotate(-8deg) scale(.95); } 60% { transform: translateX(3px) rotate(3deg); } 100% { transform: none; } }
+@keyframes droop { 0% { transform: none; } 40% { transform: translateY(6px) scale(1.04, .9); } 100% { transform: none; } }
+@keyframes lean { 0%, 100% { transform: rotate(-4deg) translateX(-2px); } 50% { transform: rotate(4deg) translateX(2px); } }
+@keyframes orbit { from { transform: rotate(0) translateX(46px) rotate(0); } to { transform: rotate(360deg) translateX(46px) rotate(-360deg); } }
+@keyframes sweat { from { opacity: 0; transform: translateY(-4px); } 30% { opacity: 1; } to { opacity: 0; transform: translateY(10px); } }
+@keyframes wiggle { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-8deg); } 60% { transform: rotate(6deg); } }
+@keyframes confetti { from { opacity: 1; transform: translate(0, 0) rotate(0); } to { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); } }
+@keyframes ghost-arrow { 0% { stroke-dashoffset: 1; opacity: 1; } 60% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes ants { to { background-position: 40px 0, -40px 100%, 0 -40px, 100% 40px; } }
+@keyframes lock-pop { 0% { transform: none; } 30% { transform: translateY(-6px) rotate(-20deg); } 100% { transform: translateY(30px) rotate(40deg); opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  .draw, .write-in { animation-duration: 1ms !important; }
+}
