@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🍅 tamatar.si
+<img src="docs/images/logo.png" alt="tamatar smiling tomato logo" width="120">
+
+# tamatar.si
 
 ### A red pen tutor for physics diagrams.
 
