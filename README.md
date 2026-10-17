@@ -43,7 +43,7 @@ Start with a mark. Reveal a hint. Ask for an explanation. See the full answer wh
 
 </details>
 
-**These screenshots show our interactive artifact prototype.** They communicate the intended experience; the Next.js frontend is still being integrated. The homework dashboard includes broader example topics, while our hackathon implementation focuses on inclined-plane problems.
+**These screenshots show our interactive artifact prototype.** The integrated Next.js app focuses on inclined-plane homework and scratch work.
 
 ## The red pen experience
 
@@ -69,7 +69,7 @@ The goal is to check both the **diagram** and the **equations**, rather than onl
 - Anthropic and Gemini provider adapters, bounded retries, cancellation, and request deadlines.
 - Five ramp problems, shared response types, mock feedback fixtures, and handwriting dataset research.
 
-**Still in progress:** the Pencil canvas, red-pen overlays, help controls, tomato interactions, and their integration into the Next.js frontend. API accuracy and error localization need evaluation on real student handwriting. Mock fixtures represent simulated feedback, not model results.
+The Pencil canvas, red-pen overlays, help controls, and tomato interactions now call the backend. PDF import extracts supported problems, lets you select them, and saves homework in this browser. Imported references are signed by the server and verified on subsequent checks. API accuracy and error localization still need evaluation on real student handwriting.
 
 ## How it works
 
@@ -109,7 +109,9 @@ Optional model, per-route provider, effort, and timeout settings are documented 
 npm run dev
 ```
 
-Open [localhost:3000](http://localhost:3000). The current landing page is a placeholder; the screenshots above show the artifact prototype.
+Open [localhost:3000](http://localhost:3000) and complete the welcome flow. Open **HW 4 · Ramps** to draw and check work, or use **New + → Import problems** to upload a PDF (under 3 MB, at most 10 pages).
+
+`NEXT_PUBLIC_MOCK=0` uses the real backend and displays request errors. Set it to `1` only for explicitly labeled simulated check feedback; PDF import still uses the backend. Provider keys stay on the server. You can set a stable `PROBLEM_SIGNING_SECRET` for imported homework; otherwise signing uses a configured provider key, and rotating that key requires reimporting saved PDFs.
 
 To check basic server health:
 
@@ -128,7 +130,7 @@ npm run build
 
 ## What's next
 
-First, finish and evaluate the complete ramp-solving experience on iPad Safari. Then expand into PDF homework import, more mechanics problems, and richer feedback.
+Next, evaluate the complete ramp-solving and PDF import experience on iPad Safari, then expand into more mechanics problems and richer feedback.
 
 We're also exploring **our own handwriting recognizer** using symbol and expression datasets. The longer-term path separates reading ink from checking physics: a custom recognizer supplies structured math, while diagram geometry and reasoning checks identify the mistake. This is research in progress; no custom trained model is claimed in this submission.
 
@@ -149,17 +151,5 @@ We're also exploring **our own handwriting recognizer** using symbol and express
 
 *A little red ink. A clearer next step. A fresher tomato.*
 
-This folder currently contains planning documents and font assets. Backend and hosting documents are proposals; they do not indicate that services have been provisioned.
 
-## Run the app
-
-Next.js 14 + Tailwind + perfect-freehand. Needs Node 18+.
-
-```bash
-npm install
-cp .env.example .env.local   # NEXT_PUBLIC_MOCK=1 uses lib/mock.ts instead of /api/check
-npm run dev                  # http://localhost:3000
-```
-
-Screens: `/welcome`, `/tour`, `/warmup`, `/` (home), `/solve/hw4`, `/board/[id]`. In dev, a **screens** pill at the bottom of the page jumps between them, sets the tomato's rot state, and resets saved data.
 </div>

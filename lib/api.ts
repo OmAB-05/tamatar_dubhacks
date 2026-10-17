@@ -1,10 +1,26 @@
 import { mockCheck } from "./mock";
 import { delay } from "./motion";
-import type { BBox, CheckRequest, CheckResponse, Problem, ProblemPart } from "./types";
+import type { BBox, CheckRequest, CheckResponse, ExtractResponse, Problem, ProblemPart } from "./types";
 
 export const MOCK = process.env.NEXT_PUBLIC_MOCK === "1";
 
-/** Calls /api/check, or lib/mock.ts in mock mode. Falls back to mock after two API errors. */
+async function request<T>(url: string, init: RequestInit, timeoutMs: number): Promise<T> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...init, signal: ctrl.signal });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error?.message || `Request failed (${res.status}). Please try again.`);
+    return body as T;
+  } catch (error) {
+    if (ctrl.signal.aborted) throw new Error("This took too long. Please try again.");
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Simulated feedback is available only when explicitly enabled. */
 export async function checkWork(
   req: CheckRequest,
   ctx: { problem: Problem | null; part: ProblemPart | "board"; attempt: number; bbox: BBox | null },
@@ -13,21 +29,14 @@ export async function checkWork(
     await delay(2400);
     return mockCheck(ctx);
   }
-  for (let tries = 0; tries < 2; tries++) {
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 15000);
-      const res = await fetch("/api/check", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(req),
-        signal: ctrl.signal,
-      });
-      clearTimeout(timer);
-      if (res.ok) return (await res.json()) as CheckResponse;
-    } catch {
-      /* retry, then fall back */
-    }
-  }
-  return mockCheck(ctx);
+  return request("/api/check", {
+    method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(req),
+  }, 65_000);
+}
+
+export async function extractProblems(file: File): Promise<ExtractResponse> {
+  if (file.size > 3_000_000) throw new Error("PDF must be under 3 MB.");
+  const form = new FormData();
+  form.set("file", file);
+  return request("/api/extract", { method: "POST", body: form }, 65_000);
 }

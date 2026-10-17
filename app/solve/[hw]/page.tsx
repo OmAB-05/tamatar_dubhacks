@@ -17,12 +17,13 @@ import Tomato from "@/components/Tomato";
 import Toolbar from "@/components/Toolbar";
 import Topbar from "@/components/Topbar";
 import { useChecker } from "@/components/useChecker";
-import { HOMEWORK } from "@/data/problems";
 import { MOCK } from "@/lib/api";
 import { BOARD_H, BOARD_W } from "@/lib/ink";
 import { useStore } from "@/lib/store";
 import type { HelpLevel, ProblemPart, Stroke } from "@/lib/types";
 import { useInk } from "@/lib/useInk";
+
+const EMPTY_PROGRESS = { fbd: false, equations: false };
 
 const PLACEHOLDER: Record<ProblemPart, string> = {
   fbd: "draw the forces on the block as arrows",
@@ -52,7 +53,7 @@ function Chip({ k, v }: { k: string; v: string }) {
 export default function Solve({ params }: { params: { hw: string } }) {
   const router = useRouter();
   const store = useStore();
-  const hw = HOMEWORK.find((h) => h.id === params.hw && h.due) ?? HOMEWORK[0];
+  const hw = store.homework.find((h) => h.id === params.hw && h.due) ?? store.homework[0];
   const [index, setIndex] = useState(0);
   const problem = hw.problems[index];
   const [part, setPart] = useState<ProblemPart>("fbd");
@@ -71,7 +72,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
   const chk = part === "fbd" ? fbdCheck : eqCheck;
   const saved = useRef<Record<string, { fbd: Stroke[]; equations: Stroke[] }>>({});
 
-  const prog = store.progress[problem.id] ?? { fbd: false, equations: false };
+  const prog = store.progress[problem.id] ?? EMPTY_PROGRESS;
   const doneCount = hw.problems.filter((p) => store.progress[p.id]?.fbd && store.progress[p.id]?.equations).length;
 
   // Remember ink per problem so tapping around the PDF never loses work.
@@ -150,6 +151,8 @@ export default function Solve({ params }: { params: { hw: string } }) {
 
   const ringBox = chk.result?.bbox;
   const feedback = chk.thinking || !!chk.result;
+
+  if (!store.ready) return null;
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -249,10 +252,11 @@ export default function Solve({ params }: { params: { hw: string } }) {
           <Button variant="red" className="wa w-full !min-h-[64px] !text-[1.5rem]" disabledReason={checkReason} onClick={() => runCheck()}>
             Check
           </Button>
+          {chk.error && <p role="alert" className="text-[0.85rem] text-tomato">{chk.error}</p>}
           <HelpLevelBar level={level} onChange={setLevel} />
           <Tally n={fbdCheck.hints + eqCheck.hints} />
           <div className="flex-1" />
-          {MOCK && <div className="sticky text-[0.6rem] leading-snug text-ink-2">in the real app, Claude reads your page here</div>}
+          {MOCK && <div className="sticky text-[0.6rem] leading-snug text-ink-2">Demo mode: feedback is simulated</div>}
           <Button variant={prog.equations ? "red" : "plain"} className="wc w-full !text-[1rem]" disabledReason={nextReason} onClick={next}>
             {index < hw.problems.length - 1 ? "Next question →" : "Finish →"}
           </Button>

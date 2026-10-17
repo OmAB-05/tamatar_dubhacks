@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { MONDAY_SCRATCH } from "@/data/problems";
+import { HOMEWORK, MONDAY_SCRATCH, type Homework } from "@/data/problems";
 import { clearAll, load, save } from "./storage";
 import { onRight, onWrong, type TomatoMemory, type TomatoReactionKind } from "./tomato";
 import type { CheckResponse, HelpLevel, Stroke } from "./types";
@@ -23,6 +23,8 @@ type Store = {
   setHelpLevel: (l: HelpLevel) => void;
   progress: Record<string, PartProgress>;
   setProgress: (problemId: string, p: PartProgress) => void;
+  homework: Homework[];
+  addHomework: (hw: Homework) => void;
   boards: Board[];
   saveBoard: (b: Board) => void;
   toast: (msg: string) => void;
@@ -41,6 +43,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [streak, setStreak] = useState(4);
   const [helpLevel, setHelpLevelRaw] = useState<HelpLevel>(0);
   const [progress, setProgressRaw] = useState<Record<string, PartProgress>>({});
+  const [importedHomework, setImportedHomework] = useState<Homework[]>([]);
   const [boards, setBoards] = useState<Board[]>(DEFAULT_BOARDS);
   const [toastMsg, setToastMsg] = useState<{ msg: string; n: number } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -52,6 +55,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setHelpLevelRaw(load("helpLevel", 0));
     setProgressRaw(load("progress", {}));
     setBoards(load("boards", DEFAULT_BOARDS));
+    setImportedHomework(load("homework", []));
     setReady(true);
   }, []);
 
@@ -95,6 +99,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const addHomework = useCallback((hw: Homework) => {
+    setImportedHomework((all) => {
+      const next = [...all, hw];
+      save("homework", next);
+      return next;
+    });
+  }, []);
+
   const saveBoard = useCallback((b: Board) => {
     setBoards((all) => {
       const next = all.some((x) => x.id === b.id) ? all.map((x) => (x.id === b.id ? b : x)) : [...all, b];
@@ -117,14 +129,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setHelpLevelRaw(0);
     setProgressRaw({});
     setBoards(DEFAULT_BOARDS);
+    setImportedHomework([]);
   }, []);
 
   const value = useMemo<Store>(
     () => ({
       ready, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak,
-      helpLevel, setHelpLevel, progress, setProgress, boards, saveBoard, toast, resetAll,
+      helpLevel, setHelpLevel, progress, setProgress, homework: [...importedHomework, ...HOMEWORK], addHomework, boards, saveBoard, toast, resetAll,
     }),
-    [ready, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak, helpLevel, setHelpLevel, progress, setProgress, boards, saveBoard, toast, resetAll],
+    [ready, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak, helpLevel, setHelpLevel, progress, setProgress, importedHomework, addHomework, boards, saveBoard, toast, resetAll],
   );
 
   return (

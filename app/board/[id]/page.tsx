@@ -9,6 +9,7 @@ import OverlayLayer from "@/components/OverlayLayer";
 import Toolbar from "@/components/Toolbar";
 import Topbar from "@/components/Topbar";
 import { useChecker } from "@/components/useChecker";
+import { MOCK } from "@/lib/api";
 import { useStore } from "@/lib/store";
 import type { HelpLevel } from "@/lib/types";
 import { useInk } from "@/lib/useInk";
@@ -80,6 +81,8 @@ export default function BoardPage({ params }: { params: { id: string } }) {
           <Button variant="red" className="wa w-full !min-h-[64px] !text-[1.5rem]" disabledReason={chk.thinking ? "the red pen is still reading" : ink.strokes.length ? null : "write something first"} onClick={() => chk.check(ink.strokes)}>
             Check
           </Button>
+          {chk.error && <p role="alert" className="text-[0.85rem] text-tomato">{chk.error}</p>}
+          {MOCK && <p className="text-[0.7rem] text-muted">Demo mode: feedback is simulated</p>}
           <HelpLevelBar level={store.helpLevel} onChange={setLevel} />
         </aside>
       </div>

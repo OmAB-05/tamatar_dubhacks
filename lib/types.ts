@@ -12,6 +12,7 @@ export type Problem = {
   title: string; // "Block on a frictionless ramp"
   text: string; // full problem statement
   givenValues: Record<string, string>; // { m: "5 kg", θ: "30°" }
+  checkToken?: string; // Server-signed reference for imported homework.
   diagramSvg?: string; // optional inline SVG of the setup
   type: "inclined_plane";
   reference: {
@@ -28,6 +29,7 @@ export type CheckRequest = {
   imageBase64: string; // PNG, no data: prefix
   problemId: string;
   part: ProblemPart;
+  problemToken?: string;
   isFinal?: boolean; // true when triggered by circle-to-finish
 };
 

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { HOMEWORK } from "@/data/problems";
 import { newId } from "@/lib/ink";
 import { useStore } from "@/lib/store";
 import { STATUS_LINES } from "@/lib/tomato";
@@ -17,7 +16,7 @@ const SHAPES = ["wa", "wb", "wc"];
 const CARD_TOMATO: Record<string, TomatoState> = { hw4: 0, hw3: 0, hw2: 1 };
 
 export default function Home() {
-  const { ready, name, tomato, progress, boards, saveBoard, toast } = useStore();
+  const { ready, name, tomato, progress, boards, saveBoard, toast, homework } = useStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +43,7 @@ export default function Home() {
 
         <h2 className="mb-4 text-[1.4rem]">Your homework</h2>
         <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {HOMEWORK.map((hw, i) => {
+          {homework.map((hw, i) => {
             const total = hw.problems.length;
             const done = hw.due ? hw.problems.filter((p) => progress[p.id]?.fbd && progress[p.id]?.equations).length : total;
             const started = hw.problems.some((p) => progress[p.id]?.fbd);
@@ -90,7 +89,7 @@ export default function Home() {
               key={b.id}
               href={`/board/${b.id}`}
               className={`card grid-paper ${SHAPES[(i + 1) % 3]} flex h-[170px] w-[270px] flex-col justify-end !p-3`}
-              style={{ animationDelay: `${(HOMEWORK.length + i) * 60}ms` }}
+              style={{ animationDelay: `${(homework.length + i) * 60}ms` }}
             >
               <StrokeThumb strokes={b.strokes} className="pointer-events-none absolute inset-2 h-[calc(100%-50px)] w-[calc(100%-16px)]" />
               <span className="relative text-[1rem]">{b.title}</span>
@@ -99,7 +98,7 @@ export default function Home() {
           <button
             type="button"
             className="card flex h-[170px] w-[270px] items-center justify-center !border-dashed !border-faint text-[1.05rem] wc"
-            style={{ animationDelay: `${(HOMEWORK.length + boards.length) * 60}ms` }}
+            style={{ animationDelay: `${(homework.length + boards.length) * 60}ms` }}
             onClick={() => {
               const id = newId();
               saveBoard({ id, title: "untitled board", strokes: [] });

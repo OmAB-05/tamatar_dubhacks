@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { checkWork, MOCK } from "@/lib/api";
 import { bboxOf, distToStroke, exportPng } from "@/lib/ink";
 import { useStore } from "@/lib/store";
@@ -32,8 +32,12 @@ export function useChecker(opts: { problem: Problem | null; part: ProblemPart | 
   const [st, setSt] = useState<CheckState>(EMPTY);
   const [thinking, setThinking] = useState(false);
   const [hints, setHints] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const busy = useRef(false);
   const revealed = useRef(0);
   const run = useRef(0);
+
+  useEffect(() => () => { run.current++; }, []);
 
   const countReveal = useCallback((level: HelpLevel, hasMistake: boolean) => {
     if (!hasMistake) return;
@@ -45,32 +49,49 @@ export function useChecker(opts: { problem: Problem | null; part: ProblemPart | 
 
   const check = useCallback(
     async (strokes: Stroke[], isFinal = false) => {
-      if (!strokes.length || thinking) return null;
+      if (!strokes.length || busy.current) return null;
+      busy.current = true;
+      setError(null);
       const id = ++run.current;
       setThinking(true);
       setSt((s) => ({ ...s, stale: false, dimmed: false }));
       store.react("lean");
       // Mock mode: circle the most recent mark, like a TA would circle the newest line.
-      const bbox = bboxOf(lastGroup(strokes));
-      const imageBase64 = MOCK ? "" : await exportPng(strokes);
-      const res = await checkWork(
-        { imageBase64, problemId: opts.problem?.id ?? "board", part: opts.part === "board" ? "equations" : opts.part, isFinal },
-        { problem: opts.problem, part: opts.part, attempt: st.attempts, bbox },
-      );
-      if (id !== run.current) return null; // superseded
-      setThinking(false);
-      revealed.current = 0;
-      countReveal(opts.level, !res.correct);
-      setSt((s) => ({ result: res, key: s.key + 1, stale: false, dimmed: false, attempts: s.attempts + 1 }));
-      store.applyCheck(res);
-      return res;
+      try {
+        const bbox = bboxOf(lastGroup(strokes));
+        const imageBase64 = MOCK ? "" : await exportPng(strokes);
+        const res = await checkWork(
+          { imageBase64, problemId: opts.problem?.id ?? "board", part: opts.part === "board" ? "equations" : opts.part, problemToken: opts.problem?.checkToken, isFinal },
+          { problem: opts.problem, part: opts.part, attempt: st.attempts, bbox },
+        );
+        if (id !== run.current) return null; // superseded
+        setThinking(false);
+        revealed.current = 0;
+        countReveal(opts.level, !res.correct);
+        setSt((s) => ({ result: res, key: s.key + 1, stale: false, dimmed: false, attempts: s.attempts + 1 }));
+        store.applyCheck(res);
+        return res;
+      } catch (err) {
+        if (id === run.current) {
+          setError(err instanceof Error ? err.message : "Could not check your work. Please try again.");
+          setSt((s) => ({ ...s, stale: !!s.result }));
+        }
+        return null;
+      } finally {
+        if (id === run.current) {
+          busy.current = false;
+          setThinking(false);
+        }
+      }
     },
-    [thinking, store, opts.problem, opts.part, opts.level, st.attempts, countReveal],
+    [store, opts.problem, opts.part, opts.level, st.attempts, countReveal],
   );
 
   const reset = useCallback((next?: CheckState) => {
     run.current++;
+    busy.current = false;
     setThinking(false);
+    setError(null);
     revealed.current = 0;
     setSt(next ?? EMPTY);
   }, []);
@@ -79,6 +100,7 @@ export function useChecker(opts: { problem: Problem | null; part: ProblemPart | 
     ...st,
     state: st,
     thinking,
+    error,
     hints,
     check,
     reset,

@@ -1,31 +1,45 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { RAMPS } from "@/data/problems";
+import { useRef, useState } from "react";
+import { extractProblems } from "@/lib/api";
+import { useStore } from "@/lib/store";
+import type { Problem } from "@/lib/types";
 import Button from "./Button";
 import Modal from "./Modal";
 import Tomato from "./Tomato";
 
-const UNSUPPORTED = ["a pulley with two blocks (not yet supported)"];
-
-/** Import modal: drop zone with marching ants, problems type themselves in (§4.5). Mock extract. */
+/** Import modal: drop zone with live PDF extraction. */
 export default function ImportModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
+  const store = useStore();
   const input = useRef<HTMLInputElement>(null);
   const [over, setOver] = useState(false);
   const [file, setFile] = useState<string | null>(null);
-  const [found, setFound] = useState(0);
-  const [picked, setPicked] = useState<Set<number>>(new Set(RAMPS.map((_, i) => i)));
+  const [problems, setProblems] = useState<Problem[]>([]);
+  const [unsupported, setUnsupported] = useState<string[]>([]);
+  const [reading, setReading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [picked, setPicked] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
-    if (!file) return;
-    setFound(0);
-    const t = setInterval(() => setFound((n) => (n >= RAMPS.length + UNSUPPORTED.length ? n : n + 1)), 450);
-    return () => clearInterval(t);
-  }, [file]);
-
-  const take = (f?: File | null) => f && setFile(f.name);
+  const take = async (f?: File | null) => {
+    if (!f) return;
+    setFile(f.name);
+    setReading(true);
+    setError(null);
+    setProblems([]);
+    setUnsupported([]);
+    try {
+      const result = await extractProblems(f);
+      setProblems(result.problems);
+      setUnsupported(result.unsupported);
+      setPicked(new Set(result.problems.map((_, i) => i)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not read this PDF. Please try again.");
+    } finally {
+      setReading(false);
+    }
+  };
 
   return (
     <Modal onClose={onClose}>
@@ -66,28 +80,24 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
       ) : (
         <div>
           <div className="mb-3 text-[0.85rem] text-muted">{file}</div>
-          <div className="mb-2 text-[1.1rem]">{found >= RAMPS.length ? "Found four problems" : "reading your PDF…"}</div>
+          <div className="mb-2 text-[1.1rem]">{reading ? "reading your PDF…" : `Found ${problems.length} supported problem${problems.length === 1 ? "" : "s"}`}</div>
+          {error && <p role="alert" className="mb-3 text-tomato">{error}</p>}
           <ul className="flex flex-col gap-2">
-            {RAMPS.slice(0, found).map((p, i) => (
+            {problems.map((p, i) => (
               <li key={p.id} className="bubble">
                 <label className="flex cursor-pointer items-start gap-3 text-[0.85rem]">
-                  <svg
-                    width="26"
-                    height="26"
-                    viewBox="0 0 26 26"
-                    className="mt-0.5 shrink-0"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setPicked((s) => {
-                        const n = new Set(s);
-                        n.has(i) ? n.delete(i) : n.add(i);
-                        return n;
-                      });
-                    }}
-                  >
-                    <path d="M4 5 L21 3.5 L22 21 L3.5 22 Z" fill="#fff" stroke="var(--ink)" strokeWidth="2" strokeLinejoin="round" />
-                    {picked.has(i) && <path d="M7 13 L11 18 L20 6" pathLength={1} stroke="var(--tomato)" strokeWidth="2.6" fill="none" strokeLinecap="round" className="draw" style={{ ["--dur" as string]: "200ms" }} />}
-                  </svg>
+                  <input
+                    type="checkbox"
+                    aria-label={`Include ${p.title}`}
+                    checked={picked.has(i)}
+                    onChange={() => setPicked((s) => {
+                      const next = new Set(s);
+                      if (next.has(i)) next.delete(i);
+                      else next.add(i);
+                      return next;
+                    })}
+                    className="mt-1 h-5 w-5 shrink-0 accent-[var(--tomato)]"
+                  />
                   <span>
                     <span className="text-ink">{p.title}</span>
                     <span className="block text-muted">{p.text}</span>
@@ -95,23 +105,24 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                 </label>
               </li>
             ))}
-            {found > RAMPS.length &&
-              UNSUPPORTED.map((u) => (
+            {unsupported.map((u) => (
                 <li key={u} className="bubble pl-9 text-[0.8rem] text-faint">
                   {u}
                 </li>
               ))}
           </ul>
           <div className="mt-5 flex justify-between">
-            <button type="button" className="link text-[0.9rem] text-muted" onClick={() => setFile(null)}>
+            <button type="button" className="link text-[0.9rem] text-muted" disabled={reading} onClick={() => { setFile(null); setError(null); }}>
               choose another file
             </button>
             <Button
               variant="red"
-              disabledReason={found < RAMPS.length ? "still reading the PDF" : picked.size === 0 ? "pick at least one problem" : null}
+              disabledReason={reading ? "still reading the PDF" : !problems.length || picked.size === 0 ? "pick at least one problem" : null}
               onClick={() => {
+                const id = `hw-${crypto.randomUUID()}`;
+                store.addHomework({ id, title: file.replace(/\.pdf$/i, ""), course: "Imported homework", due: "ready to solve", problems: problems.filter((_, i) => picked.has(i)) });
                 onClose();
-                router.push("/solve/hw4");
+                router.push(`/solve/${id}`);
               }}
             >
               Create homework
