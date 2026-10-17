@@ -1,18 +1,19 @@
 """Method 1 runner: post each synthetic case to a running /api/check and score it.
 
-Start the server with the provider under test, e.g.
+Start the server with the Claude model under test, e.g.
 
-    EVAL_DEBUG=1 AI_CHECK_PROVIDER=anthropic npm run dev      # paid
-    EVAL_DEBUG=1 AI_CHECK_PROVIDER=gemini    npm run dev      # paid
-    EVAL_DEBUG=1 EVAL_MOCK_CHECKER=1         npm run dev      # free, fake answers
+    EVAL_DEBUG=1 AI_CHECK_MODEL=sonnet npm run dev      # paid
+    EVAL_DEBUG=1 AI_CHECK_MODEL=haiku  npm run dev      # paid
+    EVAL_DEBUG=1 EVAL_MOCK_CHECKER=1   npm run dev      # free, fake answers
 
 then
 
-    python3 -I scripts/eval/run_eval.py --provider anthropic --limit 5 --yes-spend
+    python3 -I scripts/eval/run_eval.py --model sonnet --limit 5 --yes-spend
+    python3 -I scripts/eval/run_eval.py --model haiku --start 21 --limit 20 --delay 2 --yes-spend
 
-The server picks the provider; --provider only labels the CSV and is checked
-against the server's x-debug-provider header (needs EVAL_DEBUG=1). Runs against
-anthropic/gemini need --yes-spend so a paid run is never an accident.
+The server picks the model; --model only labels the CSV and is checked against
+the server's x-debug-model header (needs EVAL_DEBUG=1). Runs against sonnet or
+haiku need --yes-spend so a paid run is never an accident.
 
 CSV columns: classification correct, false accusation, missed error, errorKey
 match, bbox IoU (line box and tighter token box), latency and x-request-id.
@@ -36,10 +37,20 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
-PAID = {"anthropic", "gemini"}
+# --model label → the id the server reports in x-debug-model (see lib/ai/checker.ts MODELS).
+MODEL_IDS = {"sonnet": "claude-sonnet-5-5", "haiku": "claude-haiku-5-5", "mock": "mock"}
+PAID = {"sonnet", "haiku"}
+
+
+def check_server_model(label: str, hdrs: dict) -> str | None:
+    """Stop if the server is running a different model than the run is labeled with."""
+    served = hdrs.get("x-debug-model")
+    if served and label in MODEL_IDS and served != MODEL_IDS[label]:
+        raise SystemExit(f"server is running {served!r}, not {label} ({MODEL_IDS[label]}); stopping")
+    return served
 
 FIELDS = [
-    "caseId", "problemId", "mutation", "provider", "serverProvider", "model", "promptVersion",
+    "caseId", "problemId", "mutation", "model", "serverModel", "promptVersion",
     "httpStatus", "errorCode", "truthCorrect", "predCorrect", "classificationCorrect",
     "falseAccusation", "missedError", "truthErrorKey", "predErrorKey", "errorKeyMatch",
     "bboxIoU", "tokenBboxIoU", "latencyMs", "requestId", "mark", "observed",
@@ -90,28 +101,31 @@ def fmt(v) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Score /api/check on the synthetic eval set.")
-    ap.add_argument("--provider", required=True, choices=["anthropic", "gemini", "mock", "none"],
-                    help="label for this run; must match the server's AI_CHECK_PROVIDER")
+    ap.add_argument("--model", required=True, choices=["sonnet", "haiku", "mock", "none"],
+                    help="label for this run; must match the server's AI_CHECK_MODEL")
     ap.add_argument("--base-url", default="http://localhost:3000")
     ap.add_argument("--labels", type=Path, default=HERE / "labels")
     ap.add_argument("--images", type=Path, default=REPO / "datasets" / "eval" / "synthetic-v1")
+    ap.add_argument("--start", type=int, default=1, help="1-based case number to start from (resume another day)")
     ap.add_argument("--limit", type=int, default=None)
-    ap.add_argument("--out", type=Path, default=None, help="default: datasets/eval/results/<provider>-<time>.csv")
+    ap.add_argument("--delay", type=float, default=0.0,
+                    help="seconds between requests, e.g. 13 to stay under a 5-per-minute free-tier limit")
+    ap.add_argument("--out", type=Path, default=None, help="default: datasets/eval/results/<model>-<time>.csv")
     ap.add_argument("--timeout", type=float, default=60.0)
     ap.add_argument("--no-debug", action="store_true", help="don't request the x-debug-* headers")
-    ap.add_argument("--yes-spend", action="store_true", help="required for anthropic/gemini (paid calls)")
+    ap.add_argument("--yes-spend", action="store_true", help="required for sonnet/haiku (paid calls)")
     args = ap.parse_args()
 
-    labels = sorted(args.labels.glob("case-*.json"))[: args.limit]
+    labels = sorted(args.labels.glob("case-*.json"))[max(0, args.start - 1) :][: args.limit]
     if not labels:
         raise SystemExit(f"no labels in {args.labels}; run generate_cases.py first")
-    if args.provider in PAID and not args.yes_spend:
+    if args.model in PAID and not args.yes_spend:
         raise SystemExit(
-            f"{len(labels)} paid {args.provider} calls (each may retry once). Re-run with --yes-spend to confirm."
+            f"{len(labels)} paid {args.model} calls (each may retry once). Re-run with --yes-spend to confirm."
         )
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out = args.out or REPO / "datasets" / "eval" / "results" / f"{args.provider}-{stamp}.csv"
+    out = args.out or REPO / "datasets" / "eval" / "results" / f"{args.model}-{stamp}.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
     url = args.base_url.rstrip("/") + "/api/check"
 
@@ -119,7 +133,9 @@ def main() -> None:
     with open(out, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=FIELDS)
         writer.writeheader()
-        for path in labels:
+        for n, path in enumerate(labels):
+            if n and args.delay > 0:
+                time.sleep(args.delay)
             label = json.loads(path.read_text(encoding="utf-8"))
             png = (args.images / label["image"]).read_bytes()
             if hashlib.sha256(png).hexdigest() != label["imageSha256"]:
@@ -131,9 +147,7 @@ def main() -> None:
                 "isFinal": label["isFinal"],
             }
             status, body, hdrs, latency = post(url, payload, args.timeout, not args.no_debug)
-            server_provider = hdrs.get("x-debug-provider")
-            if server_provider and args.provider != "none" and server_provider != args.provider:
-                raise SystemExit(f"server is running {server_provider!r}, not {args.provider!r}; stopping")
+            served = check_server_model(args.model, hdrs)
 
             ok = status == 200
             truth = label["correct"]
@@ -143,9 +157,8 @@ def main() -> None:
                 "caseId": label["id"],
                 "problemId": label["problemId"],
                 "mutation": label["mutation"],
-                "provider": args.provider,
-                "serverProvider": server_provider,
-                "model": hdrs.get("x-debug-model"),
+                "model": args.model,
+                "serverModel": served,
                 "promptVersion": hdrs.get("x-debug-prompt-version"),
                 "httpStatus": status,
                 "errorCode": None if ok else (body.get("error") or {}).get("code"),

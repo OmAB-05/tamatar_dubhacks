@@ -6,9 +6,9 @@ import type { CheckInput, Checker, Effort, ExtractInput, Extractor, Usage } from
 import { ExtractModelSchema, bboxFromPixels, checkCoreShape } from "@/lib/parse";
 import { CHECK_SYSTEM, EXTRACT_SYSTEM, buildCheckPrompt } from "@/lib/prompts";
 
-// Claude adapter. Default model: claude-sonnet-5-5 (override with AI_CHECK_MODEL /
-// AI_EXTRACT_MODEL). Thinking is adaptive by default on Sonnet 5.5; depth is
-// controlled with output_config.effort.
+// Claude adapter. Default model: claude-sonnet-5-5; set AI_CHECK_MODEL /
+// AI_EXTRACT_MODEL to "haiku" for claude-haiku-5-5. Thinking is adaptive by default
+// on both; depth is controlled with output_config.effort.
 
 // Claude asks for corners in the image's own pixel space; we convert to fractions.
 const ClaudeCheckSchema = z.object({
@@ -19,8 +19,15 @@ const ClaudeCheckSchema = z.object({
     .describe("Pixel corners (top-left x0,y0; bottom-right x1,y1) of the first mistake, or null."),
 });
 
-// Server-side refusal fallback ("default" routes by refusal category).
+// Server-side refusal fallback ("default" routes by refusal category). Sonnet 5.5
+// supports it on the Claude API; Haiku 5.5 has no server-side fallback, so a refusal
+// there surfaces as provider_refused.
 const FALLBACK_BETA = "server-side-fallback-2026-07-01";
+const FALLBACK_MODELS = new Set(["claude-sonnet-5-5"]);
+
+function fallbackParams(model: string) {
+  return FALLBACK_MODELS.has(model) ? { betas: [FALLBACK_BETA], fallbacks: "default" as const } : {};
+}
 
 let client: Anthropic | null = null;
 function getClient(): Anthropic {
@@ -89,8 +96,7 @@ export class ClaudeChecker implements Checker {
         {
           model: this.model,
           max_tokens: 8000,
-          betas: [FALLBACK_BETA],
-          fallbacks: "default",
+          ...fallbackParams(this.model),
           system: CHECK_SYSTEM,
           output_config: { effort: this.effort, format: betaZodOutputFormat(ClaudeCheckSchema) },
           messages: [
@@ -134,8 +140,7 @@ export class ClaudeExtractor implements Extractor {
         {
           model: this.model,
           max_tokens: 16000,
-          betas: [FALLBACK_BETA],
-          fallbacks: "default",
+          ...fallbackParams(this.model),
           system: EXTRACT_SYSTEM,
           output_config: { effort: this.effort, format: betaZodOutputFormat(ExtractModelSchema) },
           messages: [

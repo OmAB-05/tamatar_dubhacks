@@ -4,7 +4,7 @@ import type { Problem } from "./types";
 
 // Signed references survive serverless requests without trusting browser edits.
 function signingKey(): string {
-  const key = process.env.PROBLEM_SIGNING_SECRET || process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || process.env.GEMINI_API_KEY;
+  const key = process.env.PROBLEM_SIGNING_SECRET || process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN;
   if (!key) throw new AppError("not_configured", "A provider key or PROBLEM_SIGNING_SECRET is required for PDF import");
   return key;
 }

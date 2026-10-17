@@ -4,6 +4,8 @@ Status: proposal, October 17, 2026. Related: [project context](../product/contex
 
 ## Recommendation
 
+> **Decision, October 17, 2026:** the team uses the Claude API only. Claude Sonnet 5.5 stays the default for both routes; Claude Haiku 5.5 replaces Gemini 3.8 Flash as the cheaper, faster candidate (`AI_CHECK_MODEL=haiku`). The GPT and Gemini sections below are kept as background and are not implemented.
+
 Start the demo with a Claude Sonnet vision adapter, consistent with the current context. Test **Claude Sonnet 5.5**, **GPT-6.1 Sol**, and **Gemini 3.8 Flash** on the same real iPad examples before committing to a final model. Sonnet is the initial integration choice, not a demonstrated winner on our task.
 
 In parallel with that product direction, plan a separate custom handwriting experiment: HASY for individual symbols or MathWriting for expressions. Recognition can become self-hosted; checking whether physics is correct remains a distinct task. Do not require the custom model experiment to succeed before the ramp demo works.

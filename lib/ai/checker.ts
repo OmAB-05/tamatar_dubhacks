@@ -3,9 +3,9 @@ import type { ExtractModelOutput, ModelCheck } from "@/lib/parse";
 import type { ValidImage } from "@/lib/image";
 import type { Problem, ProblemPart } from "@/lib/types";
 
-// Provider-independent boundary (backend_planning.md "Proposed code organization").
-// Routes talk to these interfaces only; provider payloads, reasoning settings,
-// and coordinate conventions stay inside each adapter.
+// Model boundary (backend_planning.md "Proposed code organization"). Routes talk
+// to these interfaces only; request payloads, reasoning settings, and coordinate
+// conventions stay inside the Claude adapter (lib/anthropic.ts).
 
 export type Usage = {
   inputTokens: number | null;
@@ -24,49 +24,47 @@ export type CheckInput = {
 export type ExtractInput = { pdfBase64: string; signal: AbortSignal };
 
 export interface Checker {
-  readonly provider: Provider | "mock"; // "mock": dev-only eval checker, lib/ai/debug.ts
+  readonly provider: "anthropic" | "mock"; // "mock": dev-only eval checker, lib/ai/debug.ts
   readonly model: string;
   check(input: CheckInput): Promise<{ result: ModelCheck; usage: Usage }>;
 }
 
 export interface Extractor {
-  readonly provider: Provider;
+  readonly provider: "anthropic";
   readonly model: string;
   extract(input: ExtractInput): Promise<{ result: ExtractModelOutput; usage: Usage }>;
 }
 
 // ---------- Configuration ----------
 
-export type Provider = "anthropic" | "gemini";
 export type Effort = "low" | "medium" | "high";
 
-const DEFAULT_MODELS: Record<Provider, string> = {
-  anthropic: "claude-sonnet-5-5",
-  gemini: "gemini-3.8-flash",
-};
+// Claude only. Sonnet is the default everywhere; Haiku is the cheaper, faster
+// alternative to measure against it (scripts/eval/).
+export const MODELS = {
+  sonnet: "claude-sonnet-5-5",
+  haiku: "claude-haiku-5-5",
+} as const;
+export type ModelTier = keyof typeof MODELS;
 
-function readProvider(name: string): Provider {
-  const value = process.env[name] ?? process.env.AI_PROVIDER ?? "anthropic";
-  if (value !== "anthropic" && value !== "gemini") {
-    throw new AppError("not_configured", `${name} must be "anthropic" or "gemini"`);
-  }
-  return value;
+/** Reads "sonnet", "haiku", or a full Claude model id; blank means Sonnet. */
+function readModel(name: string): string {
+  const value = (process.env[name] ?? "").trim();
+  if (!value) return MODELS.sonnet;
+  if (value in MODELS) return MODELS[value as ModelTier];
+  if (value.startsWith("claude-")) return value;
+  throw new AppError("not_configured", `${name} must be "sonnet", "haiku", or a Claude model id`);
 }
 
 export function aiConfig() {
-  const checkProvider = readProvider("AI_CHECK_PROVIDER");
-  const extractProvider = readProvider("AI_EXTRACT_PROVIDER");
   const effort = (process.env.AI_EFFORT ?? "low") as Effort;
   if (!["low", "medium", "high"].includes(effort)) {
     throw new AppError("not_configured", 'AI_EFFORT must be "low", "medium" or "high"');
   }
   const timeoutMs = Number(process.env.AI_TIMEOUT_MS ?? 20_000);
   return {
-    check: { provider: checkProvider, model: process.env.AI_CHECK_MODEL || DEFAULT_MODELS[checkProvider] },
-    extract: {
-      provider: extractProvider,
-      model: process.env.AI_EXTRACT_MODEL || DEFAULT_MODELS[extractProvider],
-    },
+    check: { model: readModel("AI_CHECK_MODEL") },
+    extract: { model: readModel("AI_EXTRACT_MODEL") },
     effort,
     timeoutMs: Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 20_000,
   };
@@ -120,20 +118,12 @@ export async function getChecker(): Promise<Checker> {
   const { check, effort } = aiConfig();
   const debug = await import("@/lib/ai/debug");
   if (debug.mockCheckerEnabled()) return new debug.MockChecker();
-  if (check.provider === "gemini") {
-    const { GeminiChecker } = await import("@/lib/gemini");
-    return new GeminiChecker(check.model, effort);
-  }
   const { ClaudeChecker } = await import("@/lib/anthropic");
   return new ClaudeChecker(check.model, effort);
 }
 
 export async function getExtractor(): Promise<Extractor> {
   const { extract, effort } = aiConfig();
-  if (extract.provider === "gemini") {
-    const { GeminiExtractor } = await import("@/lib/gemini");
-    return new GeminiExtractor(extract.model, effort);
-  }
   const { ClaudeExtractor } = await import("@/lib/anthropic");
   return new ClaudeExtractor(extract.model, effort);
 }

@@ -53,7 +53,7 @@ export default function HelpLadder() {
         </div>
 
         <div className="relative mb-2 h-[48px]" role="radiogroup" aria-label="help level">
-          <svg className="absolute inset-x-0 top-[18px] w-full overflow-visible" height="14" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden>
+          <svg className="absolute inset-x-[10%] top-[18px] overflow-visible" height="14" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden>
             <path d="M6 7 Q80 4 150 8 T294 6" stroke="var(--ink)" strokeWidth="2.4" fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
           </svg>
           {LEVELS.map((l, i) => (
@@ -65,12 +65,12 @@ export default function HelpLadder() {
               aria-label={l}
               onClick={() => pick(i)}
               className="absolute top-[6px] h-[38px] w-[38px] -translate-x-1/2"
-              style={{ left: `${4 + i * 30.7}%` }}
+              style={{ left: `${12.5 + i * 25}%` }}
             >
               <span className="mx-auto block h-[18px] w-[2.5px] rounded bg-ink" />
             </button>
           ))}
-          <span className="lp-nib pointer-events-none absolute top-0" style={{ left: `${4 + level * 30.7}%` }} aria-hidden>
+          <span className="lp-nib pointer-events-none absolute top-0" style={{ left: `${12.5 + level * 25}%` }} aria-hidden>
             <svg width="30" height="40" viewBox="0 0 30 40">
               <path d="M15 38 L5 16 Q15 2 25 16 Z" fill="var(--tomato)" stroke="var(--ink)" strokeWidth="2.2" strokeLinejoin="round" />
               <path d="M15 38 L15 22" stroke="#fff" strokeWidth="1.6" />
@@ -93,12 +93,12 @@ export default function HelpLadder() {
             </p>
           )}
           {level >= 1 && (
-            <div key="hint" className="sticky sticky-drop wa max-w-[420px] text-[1.05rem]" style={{ transform: "rotate(2deg)" }}>
+            <div key="hint" className="sticky-note sticky-drop wa max-w-[420px] text-[1.05rem]" style={{ transform: "rotate(2deg)" }}>
               which part of gravity points along the ramp?
             </div>
           )}
           {level >= 2 && (
-            <div key="explain" className="sticky sticky-drop wb max-w-[460px] text-[1rem] leading-snug" style={{ animationDelay: "60ms", transform: "rotate(-1.5deg)" }}>
+            <div key="explain" className="sticky-note sticky-drop wb max-w-[460px] text-[1rem] leading-snug" style={{ animationDelay: "60ms", transform: "rotate(-1.5deg)" }}>
               Split gravity in two. The part along the ramp is <span className="hl">mg sin θ</span>. The part into the ramp, mg cos θ, is the one the normal force cancels.
             </div>
           )}

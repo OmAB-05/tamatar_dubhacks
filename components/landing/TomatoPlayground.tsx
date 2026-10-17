@@ -22,7 +22,7 @@ export default function TomatoPlayground() {
         <div className="lp-spot" aria-hidden />
         <Tomato size={220} state={s} listen={false} onTap={() => setPokes((p) => p + 1)} />
         <div className="absolute -right-6 -top-6" style={{ rotate: "6deg" }}>
-          <div className="sticky text-[0.8rem]">{pokes === 0 ? "poke me" : `${pokes} poke${pokes === 1 ? "" : "s"}`}</div>
+          <div className="sticky-note text-[0.8rem]">{pokes === 0 ? "poke me" : `${pokes} poke${pokes === 1 ? "" : "s"}`}</div>
         </div>
       </div>
 

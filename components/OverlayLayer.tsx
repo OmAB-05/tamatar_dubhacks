@@ -183,7 +183,7 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
             </button>
           )}
           {level >= 1 && result?.hint && (
-            <div className="sticky sticky-drop pointer-events-auto max-w-full text-left text-[0.85rem] leading-snug" style={{ rotate: "2deg" }}>
+            <div className="sticky-note sticky-drop pointer-events-auto max-w-full text-left text-[0.85rem] leading-snug" style={{ rotate: "2deg" }}>
               {normalizeForFont(result.hint)}
               {level >= 2 && result.explanation && (
                 <div className="mt-2 border-t border-dashed border-[rgba(31,26,23,.2)] pt-2 text-ink-2">
@@ -239,7 +239,7 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
       )}
 
       {thinking && (
-        <div className="sticky sticky-drop absolute right-4 top-4 flex items-center gap-2 text-[0.85rem]">
+        <div className="sticky-note sticky-drop absolute right-4 top-4 flex items-center gap-2 text-[0.85rem]">
           <svg width="26" height="26" viewBox="0 0 26 26" className="shrink-0" style={{ animation: "wiggle .5s ease-in-out infinite" }}>
             <path d="M4 22 L6 16 L18 4 L22 8 L10 20 Z" fill="var(--tomato)" stroke="var(--ink)" strokeWidth="1.6" strokeLinejoin="round" />
           </svg>

@@ -59,7 +59,7 @@ export default function Landing() {
       {/* hero */}
       <section className="relative mx-auto grid max-w-[1180px] items-center gap-12 px-4 pb-24 pt-12 sm:px-10 lg:grid-cols-[1fr_1.05fr] lg:pt-16">
         <div>
-          <div className="sticky inline-block text-[0.85rem]" style={{ rotate: "-2deg" }}>
+          <div className="sticky-note inline-block text-[0.85rem]" style={{ rotate: "-2deg" }}>
             for handwritten physics homework
           </div>
           <h1 className="mt-5 leading-[0.95]" style={{ fontSize: "clamp(48px, 7vw, 92px)" }}>

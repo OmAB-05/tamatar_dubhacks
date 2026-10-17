@@ -7,20 +7,23 @@ python3 -I scripts/eval/fetch_datasets.py              # MathWriting excerpt + H
 python3 -I scripts/eval/generate_cases.py --count 50   # PNGs → datasets/eval/synthetic-v1/, labels → scripts/eval/labels/
 ```
 
-Start the server with the provider under test. `EVAL_DEBUG=1` makes the route return `x-debug-observed`, `x-debug-provider`, `x-debug-model` and `x-debug-prompt-version` headers when the request has `x-eval-debug: 1`. This works only outside production, and the `CheckResponse` body does not change.
+Start the server with the Claude model under test: Sonnet 5.5 (the app's default) or Haiku 5.5 (the cheaper candidate). `EVAL_DEBUG=1` makes the route return `x-debug-observed`, `x-debug-provider`, `x-debug-model` and `x-debug-prompt-version` headers when the request has `x-eval-debug: 1`. This works only outside production, and the `CheckResponse` body does not change.
 
 ```bash
-EVAL_DEBUG=1 EVAL_MOCK_CHECKER=1 npm run dev       # free: fake answers, exercises the plumbing
-EVAL_DEBUG=1 AI_CHECK_PROVIDER=anthropic npm run dev
-EVAL_DEBUG=1 AI_CHECK_PROVIDER=gemini npm run dev
+EVAL_DEBUG=1 EVAL_MOCK_CHECKER=1 npm run dev      # free: fake answers, exercises the plumbing
+EVAL_DEBUG=1 AI_CHECK_MODEL=sonnet npm run dev
+EVAL_DEBUG=1 AI_CHECK_MODEL=haiku npm run dev
 ```
 
 ```bash
-python3 -I scripts/eval/run_eval.py --provider mock --limit 5
-python3 -I scripts/eval/run_eval.py --provider anthropic --yes-spend   # paid: 50 calls, each may retry once
-python3 -I scripts/eval/transcribe.py --dry-run                        # method 2: list and render matches
-python3 -I scripts/eval/transcribe.py --provider gemini --yes-spend
+python3 -I scripts/eval/run_eval.py --model mock --limit 5
+python3 -I scripts/eval/run_eval.py --model sonnet --yes-spend    # paid: 50 calls, each may retry once
+python3 -I scripts/eval/run_eval.py --model haiku --yes-spend
+python3 -I scripts/eval/transcribe.py --dry-run                   # method 2: list and render matches
+python3 -I scripts/eval/transcribe.py --model haiku --yes-spend
 ```
+
+`--model` only labels the run; the runner stops if the server reports a different model. `--start N` resumes from case N and `--delay S` waits S seconds between requests.
 
 Results go to `datasets/eval/results/*.csv` and `datasets/eval/transcribe/*.json`.
 

@@ -66,7 +66,7 @@ The goal is to check both the **diagram** and the **equations**, rather than onl
 - Next.js application scaffold with TypeScript, Tailwind CSS, and the custom font.
 - `/api/check` for handwritten PNG submissions, with server-controlled reference solutions and validated feedback.
 - `/api/extract` for PDF problem extraction, plus `/api/health` for basic health checks.
-- Anthropic and Gemini provider adapters, bounded retries, cancellation, and request deadlines.
+- Claude adapter (Sonnet 5.5 by default, Haiku 5.5 selectable per route), bounded retries, cancellation, and request deadlines.
 - Five ramp problems, shared response types, mock feedback fixtures, and handwriting dataset research.
 
 The Pencil canvas, red-pen overlays, help controls, and tomato interactions now call the backend. PDF import extracts supported problems, lets you select them, and saves homework in this browser. Imported references are signed by the server and verified on subsequent checks. API accuracy and error localization still need evaluation on real student handwriting.
@@ -83,7 +83,7 @@ Handwritten work → PNG → /api/check → vision model + reference solution
 
 The browser sends the problem ID and work image. The backend supplies the reference solution, asks for the first incorrect step, and validates the response. Feedback includes a normalized bounding box so the frontend can place the annotation on the student's work.
 
-**Stack:** Next.js 14 · React · TypeScript · Tailwind CSS · Zod · Anthropic / Gemini SDKs. The planned drawing layer uses Pointer Events, HTML canvas, and perfect-freehand; Vercel is the intended hosting target.
+**Stack:** Next.js 14 · React · TypeScript · Tailwind CSS · Zod · Anthropic SDK (Claude Sonnet 5.5 / Haiku 5.5). The planned drawing layer uses Pointer Events, HTML canvas, and perfect-freehand; Vercel is the intended hosting target.
 
 Provider keys stay on the server. The response contains all help levels, so changing the help slider can reveal more guidance immediately.
 
@@ -98,12 +98,9 @@ npm ci
 cp .env.example .env.local
 ```
 
-Edit `.env.local` and configure **one** provider:
+Edit `.env.local` and set `ANTHROPIC_API_KEY`. Both routes use Claude Sonnet 5.5 by default; set `AI_CHECK_MODEL=haiku` or `AI_EXTRACT_MODEL=haiku` to use Claude Haiku 5.5 instead.
 
-- `AI_PROVIDER=anthropic` with `ANTHROPIC_API_KEY`, or
-- `AI_PROVIDER=gemini` with `GEMINI_API_KEY`.
-
-Optional model, per-route provider, effort, and timeout settings are documented in [.env.example](.env.example). Never commit actual keys.
+Optional model, effort, and timeout settings are documented in [.env.example](.env.example). Never commit actual keys.
 
 ```bash
 npm run dev

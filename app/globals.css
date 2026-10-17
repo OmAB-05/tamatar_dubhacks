@@ -45,7 +45,7 @@ button { cursor: pointer; }
 .cut { box-shadow: var(--cut); }
 .divider { border-bottom: 1.5px dashed var(--rule); }
 .stroke-text { -webkit-text-stroke: .6px currentColor; }
-.sticky {
+.sticky-note {
   background: var(--sticky); color: var(--ink); padding: .35em .7em;
   box-shadow: 2px 3px 0 rgba(0,0,0,.08); transform: rotate(-1deg);
 }
@@ -222,6 +222,7 @@ button { cursor: pointer; }
   background: repeating-linear-gradient(-45deg, rgba(255,229,138,.85) 0 8px, rgba(255,239,170,.85) 8px 16px);
   box-shadow: 0 1px 2px rgba(0,0,0,.06);
 }
+@media (max-width: 639px) { .lp-tape { top: -11px; width: 84px; height: 22px; } }
 
 .lp-stage { transform-origin: 0 0; box-shadow: 6px 8px 0 #f6d9d5; }
 .lp-stamp { animation: lp-stamp 420ms var(--pop); }

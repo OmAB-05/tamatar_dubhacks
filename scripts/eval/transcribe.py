@@ -8,11 +8,11 @@ stitched glyphs of method 1. This script:
      transcription from the x-debug-observed header,
   4. aligns `observed` with the label and reports confusion pairs (θ/0, μ/u, ...).
 
-Server: EVAL_DEBUG=1 plus the provider under test (see run_eval.py).
+Server: EVAL_DEBUG=1 plus the model under test (see run_eval.py).
 
     python3 -I scripts/eval/transcribe.py --dry-run                 # list + render only
-    python3 -I scripts/eval/transcribe.py --provider mock --limit 5
-    python3 -I scripts/eval/transcribe.py --provider gemini --yes-spend
+    python3 -I scripts/eval/transcribe.py --model mock --limit 5
+    python3 -I scripts/eval/transcribe.py --model haiku --yes-spend
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ sys.path.insert(0, str(HERE))  # -I drops the script dir; add back only our own
 
 from glyphs import parse_inkml  # noqa: E402
 from render import Placed, draw, finish, new_canvas  # noqa: E402
-from run_eval import PAID, post  # noqa: E402
+from run_eval import PAID, check_server_model, post  # noqa: E402
 
 import numpy as np  # noqa: E402
 
@@ -158,7 +158,8 @@ def select(root: Path, min_hits: int) -> list[dict]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="MathWriting transcription confusion test.")
-    ap.add_argument("--provider", choices=["anthropic", "gemini", "mock", "none"], default="none")
+    ap.add_argument("--model", choices=["sonnet", "haiku", "mock", "none"], default="none",
+                    help="label for this run; must match the server's AI_CHECK_MODEL")
     ap.add_argument("--base-url", default="http://localhost:3000")
     ap.add_argument("--datasets", type=Path, default=REPO / "datasets")
     ap.add_argument("--mathwriting", type=Path, default=None,
@@ -175,8 +176,8 @@ def main() -> None:
         raise SystemExit("datasets missing: run `python3 -I scripts/eval/fetch_datasets.py` first")
     exprs = select(root, args.min_hits)[: args.limit]
     print(f"{len(exprs)} expressions match the ramp vocabulary")
-    if not args.dry_run and args.provider in PAID and not args.yes_spend:
-        raise SystemExit(f"{len(exprs)} paid {args.provider} calls. Re-run with --yes-spend to confirm.")
+    if not args.dry_run and args.model in PAID and not args.yes_spend:
+        raise SystemExit(f"{len(exprs)} paid {args.model} calls. Re-run with --yes-spend to confirm.")
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out_dir = args.datasets / "eval" / "transcribe"
@@ -201,9 +202,7 @@ def main() -> None:
                 "isFinal": False,
             }
             status, body, hdrs, latency = post(url, payload, args.timeout, True)
-            server = hdrs.get("x-debug-provider")
-            if server and args.provider != "none" and server != args.provider:
-                raise SystemExit(f"server is running {server!r}, not {args.provider!r}; stopping")
+            check_server_model(args.model, hdrs)
             raw = urllib.parse.unquote(hdrs["x-debug-observed"]) if "x-debug-observed" in hdrs else None
             if raw is None and status != 503:
                 print("  no x-debug-observed header: start the server with EVAL_DEBUG=1", file=sys.stderr)
@@ -223,10 +222,10 @@ def main() -> None:
     if args.dry_run:
         print(f"rendered to {img_dir}")
         return
-    report = out_dir / f"{args.provider}-{stamp}.json"
+    report = out_dir / f"{args.model}-{stamp}.json"
     answered = [r for r in results if r.get("observedRaw")]
     summary = {
-        "provider": args.provider,
+        "model": args.model,
         "expressions": len(results),
         "transcribed": len(answered),
         "exact": sum(r["exact"] for r in answered),

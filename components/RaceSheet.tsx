@@ -40,7 +40,7 @@ export default function RaceSheet({ onClose }: { onClose: () => void }) {
         <p className="text-[0.9rem] text-ink-2">Send this homework to a friend. You both get the same page. Finish first with the fewest errors to win.</p>
         <button
           type="button"
-          className="sticky select-all text-left text-[1rem]"
+          className="sticky-note select-all text-left text-[1rem]"
           onClick={() => {
             navigator.clipboard?.writeText("https://" + link).catch(() => {});
             toast("copied!");

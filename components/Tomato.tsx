@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 import { STATUS_LINES, TAP_LINES, type TomatoReactionKind } from "@/lib/tomato";
 import type { TomatoState } from "@/lib/types";
@@ -40,6 +40,21 @@ export default function Tomato({ state, size = 96, interactive = true, listen = 
   const [blink, setBlink] = useState("5s");
   useEffect(() => setBlink(`${(4 + Math.random() * 3).toFixed(2)}s`), []);
   const bubbleTimer = useRef<ReturnType<typeof setTimeout>>();
+  const bubbleEl = useRef<HTMLDivElement>(null);
+  // Nudge the bubble so it stays on screen when the tomato sits near an edge.
+  const [fit, setFit] = useState({ dx: 0, below: false });
+
+  useLayoutEffect(() => {
+    const el = bubbleEl.current;
+    const r = wrap.current?.getBoundingClientRect();
+    if (!el || !r) return;
+    const m = 8;
+    const vw = document.documentElement.clientWidth;
+    const left = r.left + r.width / 2 - el.offsetWidth / 2;
+    let dx = Math.min(0, vw - m - (left + el.offsetWidth));
+    if (left + dx < m) dx = m - left;
+    setFit({ dx: Math.round(dx), below: r.top - el.offsetHeight - 6 < m });
+  }, [bubble]);
 
   // Global reactions (check results).
   useEffect(() => {
@@ -88,8 +103,14 @@ export default function Tomato({ state, size = 96, interactive = true, listen = 
     <div ref={wrap} className={`relative inline-block shrink-0 ${className}`} style={{ width: size, height: size }}>
       {bubble && (
         <div
-          className="bubble sticky absolute z-20 whitespace-nowrap text-[0.75rem]"
-          style={{ bottom: "100%", left: "50%", translate: "-50% -6px", transformOrigin: "bottom center" }}
+          ref={bubbleEl}
+          className="bubble sticky-note absolute z-20 whitespace-nowrap text-[0.75rem]"
+          style={{
+            ...(fit.below ? { top: "100%" } : { bottom: "100%" }),
+            left: "50%",
+            translate: `calc(-50% + ${fit.dx}px) ${fit.below ? 6 : -6}px`,
+            transformOrigin: fit.below ? "top center" : "bottom center",
+          }}
         >
           {bubble}
         </div>

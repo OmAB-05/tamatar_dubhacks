@@ -4,7 +4,7 @@ Status: proposal, October 17, 2026. Related: [AI/API plan](api_planning.md), [ha
 
 ## Decision
 
-**Use the public datasets to make Claude Sonnet 5.5 and Gemini 3.8 Flash better at our task, not to train our own model.** During the hackathon, the datasets do three jobs: build a labeled test set we could not collect by hand in time, find the specific symbols and mistakes each model gets wrong, and calibrate where each model draws its red box. Training is a fallback for one narrow, measured failure, and only after the demo works (see [When training is justified](#when-training-is-justified)).
+**Use the public datasets to make Claude Sonnet 5.5 and Claude Haiku 5.5 better at our task, not to train our own model.** (Updated October 17, 2026: the team uses Claude only, so the comparison is Claude Sonnet 5.5 against Claude Haiku 5.5. Gemini is no longer in the app.) During the hackathon, the datasets do three jobs: build a labeled test set we could not collect by hand in time, find the specific symbols and mistakes each model gets wrong, and calibrate where each model draws its red box. Training is a fallback for one narrow, measured failure, and only after the demo works (see [When training is justified](#when-training-is-justified)).
 
 Why this is the better option for us:
 
@@ -18,10 +18,10 @@ The scaffolded backend already has the right hooks:
 
 | Hook | Where | What the dataset work feeds it |
 | :---- | :---- | :---- |
-| Provider switch | `AI_CHECK_PROVIDER`, [lib/ai/checker.ts](../../lib/ai/checker.ts) | Run the same test set against Claude and Gemini |
+| Model switch | `AI_CHECK_MODEL=sonnet\|haiku`, [lib/ai/checker.ts](../../lib/ai/checker.ts) | Run the same test set against Sonnet and Haiku |
 | Prompt version | `PROMPT_VERSION` in [lib/prompts.ts](../../lib/prompts.ts) | Compare prompt changes on the same cases |
 | `observed` transcription field | `checkCoreShape` in [lib/parse.ts](../../lib/parse.ts) | Score transcription separately from grading |
-| Bbox conversion | `bboxFromPixels` / `bboxFromGemini` in [lib/parse.ts](../../lib/parse.ts) | Apply a per-provider calibration |
+| Bbox conversion | `bboxFromPixels` in [lib/parse.ts](../../lib/parse.ts) | Apply a per-model calibration |
 | Stable `errorKey` list | `ERROR_KEYS` in [lib/parse.ts](../../lib/parse.ts) | Label mutated test cases automatically |
 
 Every method below only changes prompts, configuration, or post-processing. The shared `CheckRequest`/`CheckResponse` contract stays the same.
@@ -49,9 +49,9 @@ Each MathWriting expression is written by **one person**, so whole expressions a
 
 1. Filter MathWriting labels (`normalizedLabel`) for ramp vocabulary: `\sin`, `\cos`, `\theta`, `\mu`, `mg`, `=`, fractions, and superscripts.
 2. Render each match as an image, send it through the check prompt, and compare the model's `observed` field with the label.
-3. Report the **confusion pairs** for each provider: θ/0, μ/u, sin/sm, N/H, g/9, ν/v, a minus sign read as a fraction bar, and so on.
+3. Report the **confusion pairs** for each model: θ/0, μ/u, sin/sm, N/H, g/9, ν/v, a minus sign read as a fraction bar, and so on.
 
-This is a cheap way to compare Sonnet and Gemini on reading alone, before spending our own iPad samples on the full comparison in [api_planning.md](api_planning.md).
+This is a cheap way to compare Sonnet and Haiku on reading alone, before spending our own iPad samples on the full comparison in [api_planning.md](api_planning.md).
 
 ### 3. Prompt fixes based on the confusion data
 
@@ -59,9 +59,9 @@ Use the results of method 2 to add short, specific rules to `CHECK_SYSTEM`, for 
 
 Optional: a small **glyph legend** image (5 or 6 confusing pairs drawn by several writers, taken from HASY/MathWriting) placed before the student's image, with prompt caching so it costs almost nothing after the first call. Measure it: extra images can also distract the model.
 
-### 4. Per-provider bbox calibration
+### 4. Per-model bbox calibration
 
-On the synthetic set from method 1, compare each model's box with the true box. Typical patterns to look for: boxes that are consistently too tight, shifted, or that cover the whole line instead of the wrong term. Fit a simple correction for each provider (padding plus offset, with a few parameters) and apply it in `bboxFromPixels`/`bboxFromGemini`. Report IoU before and after.
+On the synthetic set from method 1, compare each model's box with the true box. Typical patterns to look for: boxes that are consistently too tight, shifted, or that cover the whole line instead of the wrong term. Fit a simple correction for each model (padding plus offset, with a few parameters) and apply it in `bboxFromPixels`. Report IoU before and after.
 
 This replaces the guessed "add 10% padding" in [context.md §8](../product/context.md) with a measured number.
 
@@ -75,7 +75,7 @@ For Part B, the model already returns `observed`. A later version could ask for 
 | :---- | :---- | :---- | :---- |
 | After P0 `/api/check` works | Backend | Download the **MathWriting excerpt (1.5 MB)** and **HASYv2 (34.6 MB)** into `datasets/` (gitignored) and check the formats | A rendered glyph matches our canvas look |
 | +1–2 h | Backend | Generator for method 1: 50 cases (25 correct, 25 mutated, across all 5 problems) | PNG + JSON label for each case |
-| +1 h | Backend | Eval runner: posts each case to `/api/check` for each provider and writes a CSV of correct/first-error/IoU/latency/tokens | One table comparing Claude and Gemini |
+| +1 h | Backend | Eval runner: posts each case to `/api/check` for each model and writes a CSV of correct/first-error/IoU/latency | One table comparing Sonnet and Haiku |
 | Evening | Backend | Method 2 confusion test, then method 3 prompt rules, then method 4 calibration | Measurable accuracy or IoU improvement, no new false accusations |
 | Before freeze | Everyone | Final check on **real iPad handwriting** (the 50-example set in api_planning.md) | Synthetic results confirmed on real ink |
 

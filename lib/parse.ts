@@ -109,13 +109,6 @@ export function bboxFromPixels(
   return boxFromCorners(box.x0 / width, box.y0 / height, box.x1 / width, box.y1 / height);
 }
 
-/** Gemini: native [ymin, xmin, ymax, xmax] normalized to 0–1000. */
-export function bboxFromGemini(box: number[]): BBox | null {
-  if (box.length !== 4) return null;
-  const [ymin, xmin, ymax, xmax] = box;
-  return boxFromCorners(xmin / 1000, ymin / 1000, xmax / 1000, ymax / 1000);
-}
-
 // ---------- Semantic validation ----------
 
 const invalid = (msg: string) => new AppError("invalid_model_response", msg, true);

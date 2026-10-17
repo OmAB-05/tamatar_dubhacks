@@ -42,7 +42,7 @@ function Chip({ k, v }: { k: string; v: string }) {
     <button type="button" onClick={() => setOpen(true)} className="relative rounded-full border-[1.5px] border-dashed border-tomato bg-white px-2.5 py-0.5 text-[0.8rem]">
       {k} = {v}
       {open && (
-        <span className="sticky bubble absolute bottom-[calc(100%+6px)] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[1.1rem]">
+        <span className="sticky-note bubble absolute bottom-[calc(100%+6px)] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[1.1rem]">
           {k} = {v}
         </span>
       )}
@@ -256,7 +256,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
           <HelpLevelBar level={level} onChange={setLevel} />
           <Tally n={fbdCheck.hints + eqCheck.hints} />
           <div className="flex-1" />
-          {MOCK && <div className="sticky text-[0.6rem] leading-snug text-ink-2">Demo mode: feedback is simulated</div>}
+          {MOCK && <div className="sticky-note text-[0.6rem] leading-snug text-ink-2">Demo mode: feedback is simulated</div>}
           <Button variant={prog.equations ? "red" : "plain"} className="wc w-full !text-[1rem]" disabledReason={nextReason} onClick={next}>
             {index < hw.problems.length - 1 ? "Next question →" : "Finish →"}
           </Button>

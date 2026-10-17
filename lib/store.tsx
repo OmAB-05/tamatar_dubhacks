@@ -147,7 +147,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         {toastMsg && (
           <div
             key={toastMsg.n}
-            className="toast sticky"
+            className="toast sticky-note"
             onPointerDown={(e) => {
               const y0 = e.clientY;
               const el = e.currentTarget;

@@ -201,7 +201,7 @@ export default function HeroDemo() {
           {/* thinking sticky */}
           {at("check") && (
             <div className="absolute right-6 top-[96px]">
-              <div key={think} className="sticky sticky-drop text-[22px]">
+              <div key={think} className="sticky-note sticky-drop text-[22px]">
                 {THINKING[think]}
               </div>
             </div>
