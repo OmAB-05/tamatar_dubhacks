@@ -16,7 +16,8 @@ planning/
 │   └── backend_planning.md
 └── ai/
     ├── api_planning.md
-    └── handwriting-datasets.md
+    ├── handwriting-datasets.md
+    └── dataset_strategy.md
 ```
 
 - [Project context](product/context.md): product, ramp scope, architecture, contracts, and demo checklist.
@@ -26,5 +27,6 @@ planning/
 - [Backend planning](backend/backend_planning.md): routes, validation, hosting, environments, deployment, and a future model service.
 - [AI/API planning](ai/api_planning.md): model comparison, selection experiment, costs, and a custom recognition path.
 - [Handwriting datasets](ai/handwriting-datasets.md): dataset research, terms, access issues, and training advice.
+- [Dataset strategy](ai/dataset_strategy.md): how the datasets improve the API models (eval sets, prompt fixes, bbox calibration) and when training would be justified.
 
 Original planning filenames are preserved. App paths mentioned inside these documents (such as `lib/types.ts` and `public/fonts/`) are relative to the project root, not to the document's new folder.
