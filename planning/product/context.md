@@ -73,7 +73,7 @@ The student **circles the final answer** to finish, then presses Next Question.
 | Framework | **Next.js 14, App Router, TypeScript** | One repo for UI \+ API routes; fast to deploy |
 | Styling | **Tailwind CSS** | Speed |
 | Ink | **perfect-freehand** \+ HTML canvas \+ Pointer Events | Good pressure-sensitive strokes with Apple Pencil in Safari |
-| Font | **Myfont only** (`public/fonts/Myfont-Extended.otf`), our own handwriting font, used for everything: UI, problem text, red-pen notes, numbers, math | Self-hosted with `next/font/local`. No Google Fonts. See §4.1 |
+| Font | **Myfont only** (`public/fonts/Myfont.ttf`), our own handwriting font, used for everything: UI, problem text, red-pen notes, numbers, math | Self-hosted with `next/font/local`. No Google Fonts. See §4.1 |
 | AI | **Anthropic Messages API — Claude Sonnet (vision)** | Reads handwriting and diagrams, returns JSON |
 | PDF | Send the PDF directly to Claude as a document block | No parsing library needed |
 | Hosting | **Vercel** | Push to deploy |
@@ -86,7 +86,7 @@ The student **circles the final answer** to finish, then presses Next Question.
 ### 4.1 Font rule: Myfont everywhere
 
 - **One font family in the whole app: Myfont.** No Caveat, no Inter, no Crimson Pro, no system fonts (not even on the 404 page). Hierarchy comes from size, color (`--tomato` red), rotation, and highlighter/sticky backgrounds. Never use `font-weight` bold (Myfont has one weight; Safari would fake-bold it). Set `font-synthesis: none`.
-- **Use `Myfont-Extended.otf`, not the original `Myfont-Regular.otf`.** The Calligraphr original has letters and basic punctuation only. The extended file adds, in the same pen style, everything a physics page needs:
+- **Use `public/fonts/Myfont.ttf`, not the Calligraphr source `fonts/Myfont-Regular.ttf`.** The Calligraphr original has letters and basic punctuation only. The extended file adds, in the same pen style, everything a physics page needs:
   - digits `0–9`
   - operators `+ − = × ÷ · / ^ % ° < > ≤ ≥ ≈ ± ≠ √ ∞ ∝`
   - brackets `( ) [ ] { }`
@@ -97,7 +97,7 @@ The student **circles the final answer** to finish, then presses Next Question.
   - `… * # | ~ _ – —`
 
   It also lifts `. , : ; ? !` onto the letters' baseline, so `9.8` no longer reads as `9 . 8`.
-- **Regenerate** with `python fonts/tools/add_math_glyphs.py Myfont-Regular.otf fonts/Myfont-Extended.otf` (needs `fonttools` + `skia-pathops`). If you re-export Myfont from Calligraphr, re-run this script. `fonts/specimen.html` shows every glyph; serve the folder over http to view it.
+- **Regenerate** with `python fonts/tools/add_math_glyphs.py fonts/Myfont-Regular.ttf public/fonts/Myfont.ttf` (needs `fonttools` + `skia-pathops`). If you re-export Myfont from Calligraphr, re-run this script. `fonts/specimen.html` shows every glyph; serve the folder over http to view it.
 - **Subscripts** (`μₖ`, `F_N`): use `<sub>` at ~0.65em. Only `² ³ ¹` have their own glyphs.
 - **No fallback font.** Load with `fallback: []` and `display: "block"`. A character Myfont lacks should look obviously broken in dev, not quietly render in Arial.
 - **Model output:** Claude's strings go straight onto the page, so they must stick to the characters above. The check/extract prompts say so (§8), and the UI runs every string through `normalizeForFont()` to strip emoji and map the rest (`≅` → `≈`, `⋅` → `·`, LaTeX → plain text).
@@ -106,7 +106,7 @@ The student **circles the final answer** to finish, then presses Next Question.
 // app/fonts.ts
 import localFont from "next/font/local";
 export const myfont = localFont({
-  src: "../public/fonts/Myfont-Extended.otf",
+  src: "../public/fonts/Myfont.ttf",
   variable: "--font-my", display: "block", preload: true, fallback: [],
 });
 // layout.tsx: <html className={myfont.variable}>  ·  tailwind: fontFamily.sans = ["var(--font-my)"]
@@ -321,11 +321,11 @@ tamatar/
 
 ├── public/
 
-│   ├── fonts/Myfont-Extended.otf \# our font + math glyphs (copy from fonts/)
+│   ├── fonts/Myfont.ttf \# our font + math glyphs (built from fonts/)
 
 │   └── tomato/                  \# 4 SVG states
 
-├── fonts/                       \# font source: Myfont-Extended.otf, specimen.html, tools/add_math_glyphs.py
+├── fonts/                       \# font source: Myfont-Regular.ttf, specimen.html, tools/add_math_glyphs.py
 
 ├── .env.local                   \# ANTHROPIC\_API\_KEY (never commit)
 
@@ -424,7 +424,7 @@ Use clean numbers (m \= 5 kg, θ \= 30°, g \= 9.8 m/s²). Have the backend pers
 - [ ] Vercel project \+ tamatar.si DNS  
 - [ ] `ANTHROPIC_API_KEY` in Vercel env \+ `.env.local` (never committed)  
 - [ ] `lib/types.ts` agreed and committed
-- [ ] `Myfont-Extended.otf` in `public/fonts/`, loaded in `app/fonts.ts`; no other font anywhere (§4.1)
+- [ ] `Myfont.ttf` in `public/fonts/`, loaded in `app/fonts.ts`; no other font anywhere (§4.1)
 
 **P0**
 

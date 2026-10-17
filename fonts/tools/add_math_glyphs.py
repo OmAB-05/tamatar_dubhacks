@@ -2,7 +2,7 @@
 that match the Calligraphr hand (stroke ~48 units, baseline ~140, digit top ~610).
 
 Usage (needs fonttools + skia-pathops):
-    python fonts/tools/add_math_glyphs.py Myfont-Regular.otf fonts/Myfont-Extended.otf
+    python fonts/tools/add_math_glyphs.py fonts/Myfont-Regular.ttf public/fonts/Myfont.ttf
 
 Each glyph is a list of strokes; each stroke is a skeleton path in a normalized
 box: u in [0,1] across the glyph's ink width, v=0 baseline, v=1 digit top.
@@ -258,10 +258,54 @@ def build(char, width, strokes, sw, seed):
 
 
 PUNCT_SHIFT = {"period": 215, "comma": 130, "colon": 205, "semicolon": 150, "question": 200}
+CAP = 505         # cap height the math glyphs are drawn against (the first export's H)
+
+
+def median(xs):
+    xs = sorted(xs)
+    return xs[len(xs) // 2]
+
+
+def normalize(font):
+    """Calligraphr exports vary in scale. Scale the letters so caps are CAP tall and the
+    median baseline sits on BASE, which is what the math glyphs and PUNCT_SHIFT assume.
+    Returns True when the export needed it (a no-op for the original export)."""
+    glyf, hmtx, cmap = font["glyf"], font["hmtx"], font.getBestCmap()
+
+    def box(c):
+        g = glyf[cmap[ord(c)]]
+        g.recalcBounds(glyf)
+        return g.yMin, g.yMax
+
+    caps = [box(c) for c in "ABDEFHIKLMNPRTUVWXYZ" if ord(c) in cmap]
+    base = median([lo for lo, _ in caps] + [box(c)[0] for c in "acemnorsuvwxz" if ord(c) in cmap])
+    k = CAP / median([hi - lo for lo, hi in caps])
+    if abs(k - 1) < 0.15 and abs(base - BASE) < 40:
+        return False
+    for name in font.getGlyphOrder():
+        g = glyf[name]
+        adv, lsb = hmtx[name]
+        if g.numberOfContours > 0:
+            g.recalcBounds(glyf)
+            rsb = adv - g.xMax  # keep side bearings as drawn; only the ink scales
+            g.coordinates.translate((-g.xMin, -base))
+            g.coordinates.scale((k, k))
+            g.coordinates.translate((lsb, BASE))
+            g.recalcBounds(glyf)
+            hmtx[name] = (int(round(g.xMax + rsb)), lsb)
+        else:
+            hmtx[name] = (int(round(CAP * 0.5)), lsb)  # space: a word gap, not the scaled export width
+    for t in ("hhea",):
+        font[t].ascent, font[t].descent = 795, -144
+    os2 = font["OS/2"]
+    os2.usWinAscent, os2.usWinDescent = 795, 144
+    os2.sTypoAscender, os2.sTypoDescender = 795, -144
+    return True
 
 
 def main(src, dst):
     font = TTFont(src)
+    scaled = normalize(font)
     order = list(font.getGlyphOrder())
     glyf, hmtx = font["glyf"], font["hmtx"]
     cmaps = [t for t in font["cmap"].tables if t.isUnicode()]
@@ -283,17 +327,18 @@ def main(src, dst):
         added.extend(chars)
     font.setGlyphOrder(order)
     glyf.glyphOrder = order
-    # Calligraphr dropped these well below the letters' baseline, so "9.8" read as "9 . 8".
-    for gname, dy in PUNCT_SHIFT.items():
-        g = glyf[gname]
-        g.coordinates.translate((0, dy))
+    if not scaled:
+        # The first export dropped these well below the letters' baseline, so "9.8" read as "9 . 8".
+        for gname, dy in PUNCT_SHIFT.items():
+            g = glyf[gname]
+            g.coordinates.translate((0, dy))
+            g.recalcBounds(glyf)
+        # "!" is too tall to just lift: sit its dot on the baseline and shrink it to cap-ish height
+        g = glyf["exclam"]
+        g.coordinates.translate((0, -g.yMin))
+        g.coordinates.scale((1, 0.8))
+        g.coordinates.translate((0, BASE - 5))
         g.recalcBounds(glyf)
-    # "!" is too tall to just lift: sit its dot on the baseline and shrink it to cap-ish height
-    g = glyf["exclam"]
-    g.coordinates.translate((0, -g.yMin))
-    g.coordinates.scale((1, 0.8))
-    g.coordinates.translate((0, BASE - 5))
-    g.recalcBounds(glyf)
     font["maxp"].numGlyphs = len(order)
     if "post" in font and font["post"].formatType == 2.0:
         font["post"].extraNames = []

@@ -1,4 +1,4 @@
-// Map model output onto the glyphs Myfont-Extended actually has (ui_planning.md §1.5).
+// Map model output onto the glyphs Myfont.ttf actually has (ui_planning.md §1.5).
 
 const MAP: Record<string, string> = {
   "≅": "≈",
