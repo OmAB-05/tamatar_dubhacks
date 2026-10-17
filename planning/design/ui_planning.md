@@ -24,7 +24,7 @@ Three rules:
 
 ### 1.1 The rule
 
-The only font family in the app is **Myfont** (`public/fonts/Myfont-Extended.otf`, our Calligraphr font plus math glyphs, §1.2). It replaces **all** of these from the prototype and `context.md`:
+The only font family in the app is **Myfont** (`public/fonts/Myfont.ttf`, our Calligraphr font plus math glyphs, §1.2). It replaces **all** of these from the prototype and `context.md`:
 
 | Was | Used for | Now |
 | :-- | :-- | :-- |
@@ -38,11 +38,11 @@ No Google Fonts. No `<link>` to fonts.googleapis.com. Delete `Caveat`, `Crimson 
 
 Hierarchy comes from **size, color, rotation, and weight-faking** (see 1.4), not from a second typeface.
 
-### 1.2 Math glyphs: done, use `Myfont-Extended.otf`
+### 1.2 Math glyphs: done, use `Myfont.ttf`
 
 The original Calligraphr export had only 89 glyphs: letters and basic punctuation, with **no digits or math symbols**. Physics needs `m = 5 kg`, `θ = 30°`, `a = 4.9 m/s²`, `μk = 0.2`, so we extended the font **in the same pen style** (monoline, ~48-unit stroke, same baseline and heights, slight hand wobble):
 
-- **File:** `fonts/Myfont-Extended.otf`. Copy it to `public/fonts/`. It's still family "Myfont", so this is the one font, not a second one.
+- **File:** `public/fonts/Myfont.ttf`, built from the Calligraphr source `fonts/Myfont-Regular.ttf`. It's still family "Myfont", so this is the one font, not a second one.
 - **Added (77):**
   - digits `0–9`
   - operators `+ − - = × ÷ · / ^ % ° < > ≤ ≥ ≈ ± ≠ √ ∞ ∝`
@@ -66,7 +66,7 @@ The original Calligraphr export had only 89 glyphs: letters and basic punctuatio
 import localFont from "next/font/local";
 
 export const myfont = localFont({
-  src: "../public/fonts/Myfont-Extended.otf",  // copied from fonts/
+  src: "../public/fonts/Myfont.ttf",  // built by fonts/tools/add_math_glyphs.py
   variable: "--font-my",
   display: "block",          // never flash a fallback font
   preload: true,
@@ -354,7 +354,7 @@ Full canvas, no problem, `a blank page. write anything, then tap Check`. Check h
 
 | Component | New interactions to build | Priority |
 | :-- | :-- | :-- |
-| `app/fonts.ts` + globals | Myfont-Extended only, zero fallback, dev glyph check | **P0 / hour 1** |
+| `app/fonts.ts` + globals | Myfont only, zero fallback, dev glyph check | **P0 / hour 1** |
 | `InkCanvas` | pressure, palm rejection, gestures, fade-erase, live circle tint | P0 |
 | `OverlayLayer` | self-drawing ring, write-in note, tap-to-help, fade on erase | P0 |
 | `Toolbar` | press wiggle, two-step clear | P0 |
@@ -396,7 +396,7 @@ Shared animation utilities in `lib/motion.ts`: `drawIn(path, ms)`, `writeIn(el, 
 
 ## 8. Order of work for the UI person
 
-1. **Hour 1:** copy `fonts/Myfont-Extended.otf` to `public/fonts/`, set up `app/fonts.ts`, tokens + base CSS, dev glyph check (§1.5).
+1. **Hour 1:** build `public/fonts/Myfont.ttf` from `fonts/Myfont-Regular.ttf`, set up `app/fonts.ts`, tokens + base CSS, dev glyph check (§1.5).
 2. Canvas (pressure, palm rejection, undo/redo, export). Test on the iPad.
 3. Check button + thinking state + overlay ring/note on mock data. **This is the demo; get it feeling great before anything else.**
 4. Help ladder reveals + tally.
