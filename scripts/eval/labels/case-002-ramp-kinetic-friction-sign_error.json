@@ -1,0 +1,83 @@
+{
+  "id": "case-002-ramp-kinetic-friction-sign_error",
+  "generator": "synthetic-v1",
+  "seed": "20261017:1",
+  "image": "case-002-ramp-kinetic-friction-sign_error.png",
+  "imageSha256": "7ef08b9fd26914c13a2e0deed9beaac78fe720fbd6947af1746f762527ee1333",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-kinetic-friction",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "sign_error",
+  "errorKey": "sign_error",
+  "acceptErrorKeys": [
+    "sign_error"
+  ],
+  "firstErrorLine": 3,
+  "bbox": {
+    "x": 0.0558,
+    "y": 0.2475,
+    "w": 0.3359,
+    "h": 0.0523
+  },
+  "tokenBbox": {
+    "x": 0.2257,
+    "y": 0.2613,
+    "w": 0.0131,
+    "h": 0.0238
+  },
+  "lines": [
+    {
+      "text": "N = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.0529,
+        "y": 0.0726,
+        "w": 0.3489,
+        "h": 0.0506
+      }
+    },
+    {
+      "text": "f_k = μ_k N = 0.2 × 42.4 = 8.49 N",
+      "bbox": {
+        "x": 0.0527,
+        "y": 0.1552,
+        "w": 0.4554,
+        "h": 0.059
+      }
+    },
+    {
+      "text": "mg sin θ + f_k = ma",
+      "bbox": {
+        "x": 0.0558,
+        "y": 0.2475,
+        "w": 0.3359,
+        "h": 0.0523
+      }
+    },
+    {
+      "text": "24.5 + 8.49 = 5a",
+      "bbox": {
+        "x": 0.0576,
+        "y": 0.3369,
+        "w": 0.2555,
+        "h": 0.0429
+      }
+    },
+    {
+      "text": "a = 33.0 / 5 ≈ 6.6 m/s^2",
+      "bbox": {
+        "x": 0.0649,
+        "y": 0.4221,
+        "w": 0.379,
+        "h": 0.0506
+      }
+    }
+  ],
+  "glyphSources": {
+    "mathwriting": 15,
+    "hasy": 11,
+    "procedural": 1
+  }
+}

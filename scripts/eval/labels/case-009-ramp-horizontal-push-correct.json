@@ -1,0 +1,80 @@
+{
+  "id": "case-009-ramp-horizontal-push-correct",
+  "generator": "synthetic-v1",
+  "seed": "20261017:8",
+  "image": "case-009-ramp-horizontal-push-correct.png",
+  "imageSha256": "06a7f4f650d3955d0876248da450b5208bf8e2adfed3faa1ee847a8cf015a02a",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-horizontal-push",
+  "part": "equations",
+  "isFinal": true,
+  "correct": true,
+  "mutation": null,
+  "errorKey": null,
+  "acceptErrorKeys": [],
+  "firstErrorLine": null,
+  "bbox": null,
+  "tokenBbox": null,
+  "lines": [
+    {
+      "text": "F cos θ = 50 × 0.866 = 43.3 N",
+      "bbox": {
+        "x": 0.0873,
+        "y": 0.0957,
+        "w": 0.5178,
+        "h": 0.0497
+      }
+    },
+    {
+      "text": "mg sin θ = 24.5 N",
+      "bbox": {
+        "x": 0.0743,
+        "y": 0.1824,
+        "w": 0.3426,
+        "h": 0.0554
+      }
+    },
+    {
+      "text": "N = mg cos θ + F sin θ = 67.4 N",
+      "bbox": {
+        "x": 0.0826,
+        "y": 0.2723,
+        "w": 0.5971,
+        "h": 0.0565
+      }
+    },
+    {
+      "text": "F cos θ − mg sin θ = ma",
+      "bbox": {
+        "x": 0.0813,
+        "y": 0.3573,
+        "w": 0.4704,
+        "h": 0.0615
+      }
+    },
+    {
+      "text": "43.3 − 24.5 = 5a",
+      "bbox": {
+        "x": 0.0817,
+        "y": 0.4399,
+        "w": 0.2996,
+        "h": 0.0472
+      }
+    },
+    {
+      "text": "a = 18.8 / 5 ≈ 3.76 m/s^2",
+      "bbox": {
+        "x": 0.0869,
+        "y": 0.5311,
+        "w": 0.4254,
+        "h": 0.0593
+      }
+    }
+  ],
+  "glyphSources": {
+    "mathwriting": 12,
+    "hasy": 14,
+    "procedural": 1
+  }
+}

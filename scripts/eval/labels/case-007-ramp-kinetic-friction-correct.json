@@ -1,0 +1,71 @@
+{
+  "id": "case-007-ramp-kinetic-friction-correct",
+  "generator": "synthetic-v1",
+  "seed": "20261017:6",
+  "image": "case-007-ramp-kinetic-friction-correct.png",
+  "imageSha256": "3498a175a6656eb5fc44c2dc5055d1db3de61efd6b3ba5aa34666fdc6dcd69a5",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-kinetic-friction",
+  "part": "equations",
+  "isFinal": true,
+  "correct": true,
+  "mutation": null,
+  "errorKey": null,
+  "acceptErrorKeys": [],
+  "firstErrorLine": null,
+  "bbox": null,
+  "tokenBbox": null,
+  "lines": [
+    {
+      "text": "N = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.0766,
+        "y": 0.093,
+        "w": 0.3819,
+        "h": 0.0543
+      }
+    },
+    {
+      "text": "f_k = μ_k N = 0.2 × 42.4 = 8.49 N",
+      "bbox": {
+        "x": 0.078,
+        "y": 0.1763,
+        "w": 0.5023,
+        "h": 0.0579
+      }
+    },
+    {
+      "text": "mg sin θ − f_k = ma",
+      "bbox": {
+        "x": 0.073,
+        "y": 0.2694,
+        "w": 0.3502,
+        "h": 0.055
+      }
+    },
+    {
+      "text": "24.5 − 8.49 = 5a",
+      "bbox": {
+        "x": 0.0723,
+        "y": 0.3503,
+        "w": 0.2884,
+        "h": 0.0483
+      }
+    },
+    {
+      "text": "a = 16.0 / 5 ≈ 3.2 m/s^2",
+      "bbox": {
+        "x": 0.0671,
+        "y": 0.4404,
+        "w": 0.4214,
+        "h": 0.0538
+      }
+    }
+  ],
+  "glyphSources": {
+    "mathwriting": 12,
+    "hasy": 15,
+    "procedural": 1
+  }
+}

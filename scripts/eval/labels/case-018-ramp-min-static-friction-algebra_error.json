@@ -1,0 +1,83 @@
+{
+  "id": "case-018-ramp-min-static-friction-algebra_error",
+  "generator": "synthetic-v1",
+  "seed": "20261017:17",
+  "image": "case-018-ramp-min-static-friction-algebra_error.png",
+  "imageSha256": "bbfe12bdfaae841b762e5db5165c8fa0d5442a59659e40de693b74b22c33d9eb",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-min-static-friction",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "algebra_error",
+  "errorKey": "algebra_error",
+  "acceptErrorKeys": [
+    "algebra_error"
+  ],
+  "firstErrorLine": 5,
+  "bbox": {
+    "x": 0.0442,
+    "y": 0.4117,
+    "w": 0.4319,
+    "h": 0.0632
+  },
+  "tokenBbox": {
+    "x": 0.1334,
+    "y": 0.4117,
+    "w": 0.2378,
+    "h": 0.0544
+  },
+  "lines": [
+    {
+      "text": "N = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.04,
+        "y": 0.0856,
+        "w": 0.3733,
+        "h": 0.0541
+      }
+    },
+    {
+      "text": "f_s = mg sin θ = 24.5 N",
+      "bbox": {
+        "x": 0.0532,
+        "y": 0.1642,
+        "w": 0.3989,
+        "h": 0.0581
+      }
+    },
+    {
+      "text": "f_s = μ_s N",
+      "bbox": {
+        "x": 0.0505,
+        "y": 0.2464,
+        "w": 0.1504,
+        "h": 0.0626
+      }
+    },
+    {
+      "text": "μ_s mg cos θ = mg sin θ",
+      "bbox": {
+        "x": 0.0403,
+        "y": 0.3368,
+        "w": 0.427,
+        "h": 0.0549
+      }
+    },
+    {
+      "text": "μ_s = cos θ / sin θ ≈ 1.73",
+      "bbox": {
+        "x": 0.0442,
+        "y": 0.4117,
+        "w": 0.4319,
+        "h": 0.0632
+      }
+    }
+  ],
+  "glyphSources": {
+    "mathwriting": 11,
+    "hasy": 9,
+    "procedural": 1
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "id": "case-016-ramp-frictionless-normal_force_equals_mg",
+  "generator": "synthetic-v1",
+  "seed": "20261017:15",
+  "image": "case-016-ramp-frictionless-normal_force_equals_mg.png",
+  "imageSha256": "37c3bd2e800d78740e083f8933db8423c1c1b9071284ff17b0905beb32a57409",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-frictionless",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "normal_force_equals_mg",
+  "errorKey": "normal_force_equals_mg",
+  "acceptErrorKeys": [
+    "normal_force_equals_mg"
+  ],
+  "firstErrorLine": 2,
+  "bbox": {
+    "x": 0.0588,
+    "y": 0.1625,
+    "w": 0.2438,
+    "h": 0.055
+  },
+  "tokenBbox": {
+    "x": 0.1256,
+    "y": 0.1662,
+    "w": 0.1432,
+    "h": 0.0513
+  },
+  "lines": [
+    {
+      "text": "N − mg cos θ = 0",
+      "bbox": {
+        "x": 0.0683,
+        "y": 0.0779,
+        "w": 0.3097,
+        "h": 0.0556
+      }
+    },
+    {
+      "text": "N = mg = 49 N",
+      "bbox": {
+        "x": 0.0588,
+        "y": 0.1625,
+        "w": 0.2438,
+        "h": 0.055
+      }
+    },
+    {
+      "text": "mg sin θ = ma",
+      "bbox": {
+        "x": 0.0638,
+        "y": 0.2508,
+        "w": 0.262,
+        "h": 0.0558
+      }
+    },
+    {
+      "text": "a = g sin θ",
+      "bbox": {
+        "x": 0.0584,
+        "y": 0.3374,
+        "w": 0.1992,
+        "h": 0.0557
+      }
+    },
+    {
+      "text": "a = 9.8 × 0.5 = 4.9 m/s^2",
+      "bbox": {
+        "x": 0.0582,
+        "y": 0.4195,
+        "w": 0.3946,
+        "h": 0.0529
+      }
+    }
+  ],
+  "glyphSources": {
+    "mathwriting": 10,
+    "hasy": 10,
+    "procedural": 1
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "id": "case-033-ramp-min-static-friction-correct",
+  "generator": "synthetic-v1",
+  "seed": "20261017:32",
+  "image": "case-033-ramp-min-static-friction-correct.png",
+  "imageSha256": "0c86968a0ae4c86ceaa16049f074d0ada600b5c5682eef81d83f5e921e6f0a1b",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-min-static-friction",
+  "part": "equations",
+  "isFinal": true,
+  "correct": true,
+  "mutation": null,
+  "errorKey": null,
+  "acceptErrorKeys": [],
+  "firstErrorLine": null,
+  "bbox": null,
+  "tokenBbox": null,
+  "lines": [
+    {
+      "text": "N = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.0857,
+        "y": 0.0847,
+        "w": 0.3646,
+        "h": 0.0586
+      }
+    },
+    {
+      "text": "f_s = mg sin θ = 24.5 N",
+      "bbox": {
+        "x": 0.0824,
+        "y": 0.1757,
+        "w": 0.3868,
+        "h": 0.0552
+      }
+    },
+    {
+      "text": "f_s = μ_s N",
+      "bbox": {
+        "x": 0.0782,
+        "y": 0.2622,
+        "w": 0.1552,
+        "h": 0.0531
+      }
+    },
+    {
+      "text": "μ_s mg cos θ = mg sin θ",
+      "bbox": {
+        "x": 0.0801,
+        "y": 0.3374,
+        "w": 0.4104,
+        "h": 0.0599
+      }
+    },
+    {
+      "text": "μ_s = tan θ = tan 30° ≈ 0.58",
+      "bbox": {
+        "x": 0.0732,
+        "y": 0.4337,
+        "w": 0.4654,
+        "h": 0.0481
+      }
+    }
+  ],
+  "glyphSources": {
+    "hasy": 10,
+    "mathwriting": 12,
+    "procedural": 1
+  }
+}

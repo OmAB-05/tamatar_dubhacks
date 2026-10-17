@@ -1,0 +1,83 @@
+{
+  "id": "case-038-ramp-min-static-friction-normal_force_equals_mg",
+  "generator": "synthetic-v1",
+  "seed": "20261017:37",
+  "image": "case-038-ramp-min-static-friction-normal_force_equals_mg.png",
+  "imageSha256": "988f3eaa3b2271b460094f000d95793efb4e52c08ab6202be8ef45584227861b",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-min-static-friction",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "normal_force_equals_mg",
+  "errorKey": "normal_force_equals_mg",
+  "acceptErrorKeys": [
+    "normal_force_equals_mg"
+  ],
+  "firstErrorLine": 1,
+  "bbox": {
+    "x": 0.0542,
+    "y": 0.0727,
+    "w": 0.2457,
+    "h": 0.0571
+  },
+  "tokenBbox": {
+    "x": 0.122,
+    "y": 0.0733,
+    "w": 0.1457,
+    "h": 0.0565
+  },
+  "lines": [
+    {
+      "text": "N = mg = 49 N",
+      "bbox": {
+        "x": 0.0542,
+        "y": 0.0727,
+        "w": 0.2457,
+        "h": 0.0571
+      }
+    },
+    {
+      "text": "f_s = mg sin θ = 24.5 N",
+      "bbox": {
+        "x": 0.0496,
+        "y": 0.1658,
+        "w": 0.3768,
+        "h": 0.0541
+      }
+    },
+    {
+      "text": "f_s = μ_s N",
+      "bbox": {
+        "x": 0.0579,
+        "y": 0.2495,
+        "w": 0.1496,
+        "h": 0.0569
+      }
+    },
+    {
+      "text": "μ_s mg = mg sin θ",
+      "bbox": {
+        "x": 0.0557,
+        "y": 0.3276,
+        "w": 0.2971,
+        "h": 0.0665
+      }
+    },
+    {
+      "text": "μ_s = sin θ = 0.5",
+      "bbox": {
+        "x": 0.0561,
+        "y": 0.4228,
+        "w": 0.2717,
+        "h": 0.0576
+      }
+    }
+  ],
+  "glyphSources": {
+    "mathwriting": 7,
+    "hasy": 8,
+    "procedural": 1
+  }
+}

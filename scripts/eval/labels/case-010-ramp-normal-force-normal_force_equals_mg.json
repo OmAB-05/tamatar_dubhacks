@@ -1,0 +1,74 @@
+{
+  "id": "case-010-ramp-normal-force-normal_force_equals_mg",
+  "generator": "synthetic-v1",
+  "seed": "20261017:9",
+  "image": "case-010-ramp-normal-force-normal_force_equals_mg.png",
+  "imageSha256": "6452e1168ea60c45c85d277bed8182fe00f583b74abd10914af0cbc41231bdc0",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-normal-force",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "normal_force_equals_mg",
+  "errorKey": "normal_force_equals_mg",
+  "acceptErrorKeys": [
+    "normal_force_equals_mg"
+  ],
+  "firstErrorLine": 2,
+  "bbox": {
+    "x": 0.0357,
+    "y": 0.1877,
+    "w": 0.1138,
+    "h": 0.0463
+  },
+  "tokenBbox": {
+    "x": 0.099,
+    "y": 0.1969,
+    "w": 0.0505,
+    "h": 0.0372
+  },
+  "lines": [
+    {
+      "text": "N − mg cos θ = 0",
+      "bbox": {
+        "x": 0.0456,
+        "y": 0.1051,
+        "w": 0.2609,
+        "h": 0.0498
+      }
+    },
+    {
+      "text": "N = mg",
+      "bbox": {
+        "x": 0.0357,
+        "y": 0.1877,
+        "w": 0.1138,
+        "h": 0.0463
+      }
+    },
+    {
+      "text": "N = 10 × 9.8",
+      "bbox": {
+        "x": 0.0478,
+        "y": 0.2643,
+        "w": 0.1653,
+        "h": 0.0402
+      }
+    },
+    {
+      "text": "N = 98 N",
+      "bbox": {
+        "x": 0.0339,
+        "y": 0.343,
+        "w": 0.1253,
+        "h": 0.038
+      }
+    }
+  ],
+  "glyphSources": {
+    "hasy": 9,
+    "mathwriting": 5,
+    "procedural": 1
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "case-015-ramp-normal-force-correct",
+  "generator": "synthetic-v1",
+  "seed": "20261017:14",
+  "image": "case-015-ramp-normal-force-correct.png",
+  "imageSha256": "b889b45816895673d61846ae3797a5c1edd96040bc2fc73d1e71843e0d18c59d",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-normal-force",
+  "part": "equations",
+  "isFinal": true,
+  "correct": true,
+  "mutation": null,
+  "errorKey": null,
+  "acceptErrorKeys": [],
+  "firstErrorLine": null,
+  "bbox": null,
+  "tokenBbox": null,
+  "lines": [
+    {
+      "text": "N − mg cos θ = 0",
+      "bbox": {
+        "x": 0.0605,
+        "y": 0.0932,
+        "w": 0.2599,
+        "h": 0.0494
+      }
+    },
+    {
+      "text": "N = mg cos θ",
+      "bbox": {
+        "x": 0.0714,
+        "y": 0.1704,
+        "w": 0.2017,
+        "h": 0.0519
+      }
+    },
+    {
+      "text": "N = 10 × 9.8 × 0.866",
+      "bbox": {
+        "x": 0.07,
+        "y": 0.2465,
+        "w": 0.305,
+        "h": 0.0425
+      }
+    },
+    {
+      "text": "N ≈ 84.9 N",
+      "bbox": {
+        "x": 0.0607,
+        "y": 0.3283,
+        "w": 0.1652,
+        "h": 0.0409
+      }
+    }
+  ],
+  "glyphSources": {
+    "hasy": 11,
+    "mathwriting": 6,
+    "procedural": 1
+  }
+}

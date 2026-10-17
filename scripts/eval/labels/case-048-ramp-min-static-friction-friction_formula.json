@@ -1,0 +1,84 @@
+{
+  "id": "case-048-ramp-min-static-friction-friction_formula",
+  "generator": "synthetic-v1",
+  "seed": "20261017:47",
+  "image": "case-048-ramp-min-static-friction-friction_formula.png",
+  "imageSha256": "bcd61f100e6f87dc3743bf985eae7a2212fa6440d5ab56b4d70c5a711b9fac4c",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-min-static-friction",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "friction_formula",
+  "errorKey": "friction_formula",
+  "acceptErrorKeys": [
+    "friction_formula",
+    "normal_force_equals_mg"
+  ],
+  "firstErrorLine": 3,
+  "bbox": {
+    "x": 0.0714,
+    "y": 0.2357,
+    "w": 0.1631,
+    "h": 0.0505
+  },
+  "tokenBbox": {
+    "x": 0.1467,
+    "y": 0.247,
+    "w": 0.0879,
+    "h": 0.0392
+  },
+  "lines": [
+    {
+      "text": "N = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.0641,
+        "y": 0.0927,
+        "w": 0.3443,
+        "h": 0.0529
+      }
+    },
+    {
+      "text": "f_s = mg sin θ = 24.5 N",
+      "bbox": {
+        "x": 0.0722,
+        "y": 0.1657,
+        "w": 0.3541,
+        "h": 0.0525
+      }
+    },
+    {
+      "text": "f_s = μ_s mg",
+      "bbox": {
+        "x": 0.0714,
+        "y": 0.2357,
+        "w": 0.1631,
+        "h": 0.0505
+      }
+    },
+    {
+      "text": "μ_s mg = mg sin θ",
+      "bbox": {
+        "x": 0.0642,
+        "y": 0.3086,
+        "w": 0.2652,
+        "h": 0.0523
+      }
+    },
+    {
+      "text": "μ_s = sin 30° = 0.5",
+      "bbox": {
+        "x": 0.0687,
+        "y": 0.3813,
+        "w": 0.2667,
+        "h": 0.051
+      }
+    }
+  ],
+  "glyphSources": {
+    "hasy": 7,
+    "mathwriting": 11,
+    "procedural": 1
+  }
+}

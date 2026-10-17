@@ -1,0 +1,71 @@
+{
+  "id": "case-021-ramp-frictionless-correct",
+  "generator": "synthetic-v1",
+  "seed": "20261017:20",
+  "image": "case-021-ramp-frictionless-correct.png",
+  "imageSha256": "a9e9650f2cb9bffd47f8d32dd8671292987c8a136f8a055f651b206e700f327c",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-frictionless",
+  "part": "equations",
+  "isFinal": true,
+  "correct": true,
+  "mutation": null,
+  "errorKey": null,
+  "acceptErrorKeys": [],
+  "firstErrorLine": null,
+  "bbox": null,
+  "tokenBbox": null,
+  "lines": [
+    {
+      "text": "N − mg cos θ = 0",
+      "bbox": {
+        "x": 0.0568,
+        "y": 0.071,
+        "w": 0.3305,
+        "h": 0.0584
+      }
+    },
+    {
+      "text": "N = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.0517,
+        "y": 0.1638,
+        "w": 0.3973,
+        "h": 0.0558
+      }
+    },
+    {
+      "text": "mg sin θ = ma",
+      "bbox": {
+        "x": 0.0575,
+        "y": 0.2501,
+        "w": 0.3098,
+        "h": 0.0562
+      }
+    },
+    {
+      "text": "a = g sin θ",
+      "bbox": {
+        "x": 0.0594,
+        "y": 0.3389,
+        "w": 0.2245,
+        "h": 0.0562
+      }
+    },
+    {
+      "text": "a = 9.8 × 0.5 = 4.9 m/s^2",
+      "bbox": {
+        "x": 0.0572,
+        "y": 0.4292,
+        "w": 0.4332,
+        "h": 0.0567
+      }
+    }
+  ],
+  "glyphSources": {
+    "mathwriting": 10,
+    "hasy": 10,
+    "procedural": 1
+  }
+}

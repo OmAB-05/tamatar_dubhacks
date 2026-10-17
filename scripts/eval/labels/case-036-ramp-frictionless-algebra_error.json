@@ -1,0 +1,83 @@
+{
+  "id": "case-036-ramp-frictionless-algebra_error",
+  "generator": "synthetic-v1",
+  "seed": "20261017:35",
+  "image": "case-036-ramp-frictionless-algebra_error.png",
+  "imageSha256": "2df1a67f6dc69d59e4c0976c39b15a35aa3781227d2fa0db8a2cda73e09f48c6",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-frictionless",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "algebra_error",
+  "errorKey": "algebra_error",
+  "acceptErrorKeys": [
+    "algebra_error"
+  ],
+  "firstErrorLine": 4,
+  "bbox": {
+    "x": 0.0387,
+    "y": 0.3589,
+    "w": 0.2337,
+    "h": 0.0632
+  },
+  "tokenBbox": {
+    "x": 0.1452,
+    "y": 0.3589,
+    "w": 0.1272,
+    "h": 0.0582
+  },
+  "lines": [
+    {
+      "text": "N − mg cos θ = 0",
+      "bbox": {
+        "x": 0.0321,
+        "y": 0.0651,
+        "w": 0.3113,
+        "h": 0.0633
+      }
+    },
+    {
+      "text": "N = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.0354,
+        "y": 0.1651,
+        "w": 0.3922,
+        "h": 0.0614
+      }
+    },
+    {
+      "text": "mg sin θ = ma",
+      "bbox": {
+        "x": 0.0392,
+        "y": 0.264,
+        "w": 0.2887,
+        "h": 0.0593
+      }
+    },
+    {
+      "text": "a = g / sin θ",
+      "bbox": {
+        "x": 0.0387,
+        "y": 0.3589,
+        "w": 0.2337,
+        "h": 0.0632
+      }
+    },
+    {
+      "text": "a = 9.8 / 0.5 = 19.6 m/s^2",
+      "bbox": {
+        "x": 0.0342,
+        "y": 0.4611,
+        "w": 0.4524,
+        "h": 0.0564
+      }
+    }
+  ],
+  "glyphSources": {
+    "hasy": 12,
+    "mathwriting": 9,
+    "procedural": 1
+  }
+}

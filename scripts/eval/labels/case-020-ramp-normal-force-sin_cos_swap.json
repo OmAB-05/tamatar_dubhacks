@@ -1,0 +1,74 @@
+{
+  "id": "case-020-ramp-normal-force-sin_cos_swap",
+  "generator": "synthetic-v1",
+  "seed": "20261017:19",
+  "image": "case-020-ramp-normal-force-sin_cos_swap.png",
+  "imageSha256": "847210e4f486efb0110fdaf75390b44ff5d1abe48bdc85da96f6b7e4dd7152a5",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-normal-force",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "sin_cos_swap",
+  "errorKey": "sin_cos_swap",
+  "acceptErrorKeys": [
+    "sin_cos_swap"
+  ],
+  "firstErrorLine": 1,
+  "bbox": {
+    "x": 0.0483,
+    "y": 0.0958,
+    "w": 0.271,
+    "h": 0.0477
+  },
+  "tokenBbox": {
+    "x": 0.1629,
+    "y": 0.0977,
+    "w": 0.0532,
+    "h": 0.0374
+  },
+  "lines": [
+    {
+      "text": "N − mg sin θ = 0",
+      "bbox": {
+        "x": 0.0483,
+        "y": 0.0958,
+        "w": 0.271,
+        "h": 0.0477
+      }
+    },
+    {
+      "text": "N = mg sin θ",
+      "bbox": {
+        "x": 0.0543,
+        "y": 0.1737,
+        "w": 0.2198,
+        "h": 0.0511
+      }
+    },
+    {
+      "text": "N = 10 × 9.8 × 0.5",
+      "bbox": {
+        "x": 0.0583,
+        "y": 0.2501,
+        "w": 0.248,
+        "h": 0.0401
+      }
+    },
+    {
+      "text": "N = 49 N",
+      "bbox": {
+        "x": 0.0603,
+        "y": 0.33,
+        "w": 0.1247,
+        "h": 0.04
+      }
+    }
+  ],
+  "glyphSources": {
+    "mathwriting": 8,
+    "hasy": 8,
+    "procedural": 1
+  }
+}

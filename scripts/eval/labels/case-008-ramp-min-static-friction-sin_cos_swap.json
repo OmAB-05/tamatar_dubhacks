@@ -1,0 +1,83 @@
+{
+  "id": "case-008-ramp-min-static-friction-sin_cos_swap",
+  "generator": "synthetic-v1",
+  "seed": "20261017:7",
+  "image": "case-008-ramp-min-static-friction-sin_cos_swap.png",
+  "imageSha256": "bf24206ce1eb9b380541da5d38760c5eef945ddd917c291346c7773dc6e5622d",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-min-static-friction",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "sin_cos_swap",
+  "errorKey": "sin_cos_swap",
+  "acceptErrorKeys": [
+    "sin_cos_swap"
+  ],
+  "firstErrorLine": 2,
+  "bbox": {
+    "x": 0.076,
+    "y": 0.1504,
+    "w": 0.3451,
+    "h": 0.0506
+  },
+  "tokenBbox": {
+    "x": 0.2091,
+    "y": 0.163,
+    "w": 0.0474,
+    "h": 0.0274
+  },
+  "lines": [
+    {
+      "text": "N = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.078,
+        "y": 0.0716,
+        "w": 0.3392,
+        "h": 0.0509
+      }
+    },
+    {
+      "text": "f_s = mg cos θ = 42.4 N",
+      "bbox": {
+        "x": 0.076,
+        "y": 0.1504,
+        "w": 0.3451,
+        "h": 0.0506
+      }
+    },
+    {
+      "text": "f_s = μ_s N",
+      "bbox": {
+        "x": 0.0772,
+        "y": 0.2252,
+        "w": 0.1417,
+        "h": 0.0496
+      }
+    },
+    {
+      "text": "μ_s mg cos θ = mg cos θ",
+      "bbox": {
+        "x": 0.0763,
+        "y": 0.2936,
+        "w": 0.3942,
+        "h": 0.0572
+      }
+    },
+    {
+      "text": "μ_s = 1",
+      "bbox": {
+        "x": 0.0743,
+        "y": 0.3795,
+        "w": 0.0903,
+        "h": 0.0478
+      }
+    }
+  ],
+  "glyphSources": {
+    "hasy": 5,
+    "mathwriting": 8,
+    "procedural": 1
+  }
+}

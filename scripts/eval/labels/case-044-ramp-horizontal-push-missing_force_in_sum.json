@@ -1,0 +1,93 @@
+{
+  "id": "case-044-ramp-horizontal-push-missing_force_in_sum",
+  "generator": "synthetic-v1",
+  "seed": "20261017:43",
+  "image": "case-044-ramp-horizontal-push-missing_force_in_sum.png",
+  "imageSha256": "f082e819932e859dffbea37262bdd1605984d1e83f02d4aae3b83a3b65054650",
+  "width": 1568,
+  "height": 1176,
+  "problemId": "ramp-horizontal-push",
+  "part": "equations",
+  "isFinal": true,
+  "correct": false,
+  "mutation": "missing_force_in_sum",
+  "errorKey": "missing_force_in_sum",
+  "acceptErrorKeys": [
+    "missing_force_in_sum",
+    "newton_second_law_setup"
+  ],
+  "firstErrorLine": 4,
+  "bbox": {
+    "x": 0.0684,
+    "y": 0.3538,
+    "w": 0.2361,
+    "h": 0.0412
+  },
+  "tokenBbox": {
+    "x": 0.0684,
+    "y": 0.3538,
+    "w": 0.2361,
+    "h": 0.0412
+  },
+  "lines": [
+    {
+      "text": "F cos θ = 50 × 0.866 = 43.3 N",
+      "bbox": {
+        "x": 0.0753,
+        "y": 0.0716,
+        "w": 0.4872,
+        "h": 0.0491
+      }
+    },
+    {
+      "text": "mg sin θ = 24.5 N",
+      "bbox": {
+        "x": 0.0676,
+        "y": 0.1711,
+        "w": 0.3184,
+        "h": 0.0538
+      }
+    },
+    {
+      "text": "N = mg cos θ + F sin θ = 67.4 N",
+      "bbox": {
+        "x": 0.0749,
+        "y": 0.2493,
+        "w": 0.5172,
+        "h": 0.0639
+      }
+    },
+    {
+      "text": "F cos θ = ma",
+      "bbox": {
+        "x": 0.0684,
+        "y": 0.3538,
+        "w": 0.2361,
+        "h": 0.0412
+      }
+    },
+    {
+      "text": "43.3 = 5a",
+      "bbox": {
+        "x": 0.0621,
+        "y": 0.4452,
+        "w": 0.1765,
+        "h": 0.0438
+      }
+    },
+    {
+      "text": "a = 43.3 / 5 ≈ 8.66 m/s^2",
+      "bbox": {
+        "x": 0.0629,
+        "y": 0.5368,
+        "w": 0.4285,
+        "h": 0.0527
+      }
+    }
+  ],
+  "glyphSources": {
+    "hasy": 11,
+    "mathwriting": 13,
+    "procedural": 1
+  }
+}
