@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Myfont specimen</title>
+<style>
+  @font-face { font-family: Myfont; src: url("Myfont-Extended.otf"); font-display: block; }
+  /* Adobe-Blank-style guard: any glyph Myfont lacks shows as a red box instead of a system font */
+  @font-face { font-family: Missing; src: local("LastResort"); }
+  body { font-family: Myfont, Missing; font-synthesis: none; margin: 32px; color: #1f1a17; background: #fff; font-size: 40px; line-height: 1.5; }
+  h1 { font-weight: 400; font-size: 64px; margin: 0 0 12px; }
+  .red { color: #c2392d; transform: rotate(-3deg); display: inline-block; }
+  .sticky { background: #fff3a8; padding: 8px 16px; display: inline-block; }
+  small { font-size: 26px; color: #6b6461; }
+</style>
+<h1>tamatar<span class="red">.si</span></h1>
+<p>ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789 ( ) [ ] { }</p>
+<p>+ − = × ÷ · / ^ % ° &lt; &gt; ≤ ≥ ≈ ± ≠ √ ∞ ∝<br>→ ← ↑ ↓ ⊥ ∥ ∠ … * # | ~ _<br>θ μ Δ α β π Σ ω φ λ τ ρ Ω</p>
+<p>Block on a ramp: m = 5 kg, θ = 30°, g = 9.8 m/s², μ<sub>k</sub> = 0.20</p>
+<p>a = g(sin θ − μ<sub>k</sub> cos θ) ≈ 3.2 m/s² down the ramp</p>
+<p><span class="red">Normal ⊥ to ramp</span> &nbsp; <span class="sticky">which way does the ramp push on the block?</span></p>
+<p><small>Hi, welcome to tamatar! what’s your name? your tomato is looking fresh today.</small></p>
