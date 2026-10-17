@@ -16,7 +16,7 @@ export function Wordmark() {
   const { tomato, toast } = useStore();
   const ref = useRef<HTMLSpanElement>(null);
   return (
-    <Link href="/" className="flex items-baseline text-[1.5rem] leading-none">
+    <Link href="/home" className="flex items-baseline text-[1.5rem] leading-none">
       tamatar
       <span
         ref={ref}

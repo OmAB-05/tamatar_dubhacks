@@ -110,7 +110,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
   );
 
   const next = useCallback(() => {
-    if (index >= hw.problems.length - 1) return router.push("/");
+    if (index >= hw.problems.length - 1) return router.push("/home");
     setTurning((t) => t + 1);
     setTimeout(() => selectProblem(index + 1), 250);
   }, [index, hw.problems.length, router, selectProblem]);

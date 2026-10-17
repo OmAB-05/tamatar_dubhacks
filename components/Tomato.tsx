@@ -36,7 +36,9 @@ export default function Tomato({ state, size = 96, interactive = true, listen = 
   const eyes = useRef<SVGGElement>(null);
   const [anim, setAnim] = useState<{ kind: TomatoReactionKind; n: number } | null>(null);
   const [bubble, setBubble] = useState<string | null>(null);
-  const [blink] = useState(() => `${4 + Math.random() * 3}s`);
+  // Random blink rhythm, picked after mount so server and client markup match.
+  const [blink, setBlink] = useState("5s");
+  useEffect(() => setBlink(`${(4 + Math.random() * 3).toFixed(2)}s`), []);
   const bubbleTimer = useRef<ReturnType<typeof setTimeout>>();
 
   // Global reactions (check results).

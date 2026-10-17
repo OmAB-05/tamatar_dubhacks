@@ -9,7 +9,8 @@ const SCREENS = [
   ["/welcome", "welcome"],
   ["/tour", "quick tour"],
   ["/warmup", "warm-up"],
-  ["/", "home"],
+  ["/", "landing"],
+  ["/home", "home"],
   ["/solve/hw4", "solve"],
   ["/board/monday", "whiteboard"],
 ] as const;

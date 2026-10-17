@@ -148,7 +148,7 @@ export default function Warmup() {
           </InkCanvas>
           <div className="mt-4 flex justify-end">
             {result?.correct ? (
-              <Button variant="red" className="wa !px-7 !text-[1.3rem] bubble" onClick={() => router.push("/")}>
+              <Button variant="red" className="wa !px-7 !text-[1.3rem] bubble" onClick={() => router.push("/home")}>
                 take me to my homework
               </Button>
             ) : (
