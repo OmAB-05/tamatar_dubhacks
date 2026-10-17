@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "tamatar",
+      "runtimeExecutable": "/Users/arnavbhattacharya/.local/node/bin/npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": { "PATH": "/Users/arnavbhattacharya/.local/node/bin:/usr/bin:/bin" },
+      "port": 3000
+    }
+  ]
+}
