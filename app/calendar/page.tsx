@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import Button from "@/components/Button";
+import DueDateEdit from "@/components/DueDateEdit";
 import ImportModal from "@/components/ImportModal";
 import Topbar from "@/components/Topbar";
 import type { Homework } from "@/data/problems";
@@ -53,7 +54,7 @@ export default function CalendarPage() {
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <Topbar />
-      <main className="mx-auto grid w-full max-w-[72rem] flex-1 grid-cols-1 gap-8 px-8 py-8 lg:grid-cols-[1fr_17rem]">
+      <main className="mx-auto grid w-full max-w-[72rem] flex-1 grid-cols-1 gap-8 px-4 py-8 sm:px-8 lg:grid-cols-[1fr_17rem]">
         <section>
           <div className="mb-4 flex items-center gap-3">
             <h1 className="text-[2.2rem] leading-none">{month.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</h1>
@@ -141,6 +142,7 @@ export default function CalendarPage() {
                         <div className="h-full rounded-full bg-tomato" style={{ width: `${Math.round(fraction * 100)}%` }} />
                       </div>
                     </Link>
+                    {hw.id.startsWith("hw-") && <DueDateEdit hw={hw} className="mt-1 px-1" />}
                   </li>
                 );
               })}

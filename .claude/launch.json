@@ -65,6 +65,24 @@
         "ANTHROPIC_AUTH_TOKEN": ""
       },
       "port": 3101
+    },
+    {
+      "name": "tamatar-local",
+      "runtimeExecutable": "/Users/saiompatro/.nvm/versions/node/v20.18.3/bin/npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3020"
+      ],
+      "env": {
+        "PATH": "/Users/saiompatro/.nvm/versions/node/v20.18.3/bin:/usr/bin:/bin",
+        "NEXT_PUBLIC_SUPABASE_URL": "",
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "",
+        "NEXT_PUBLIC_MOCK": "1"
+      },
+      "port": 3020
     }
   ]
 }

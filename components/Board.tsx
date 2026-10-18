@@ -12,7 +12,7 @@ export default function FitBoard({ children }: { children: React.ReactNode }) {
     const el = box.current!;
     const ro = new ResizeObserver(([e]) => {
       const { width: cw, height: ch } = e.contentRect;
-      setWidth(Math.max(280, Math.min(cw, (ch * BOARD_W) / BOARD_H)));
+      setWidth(Math.max(0, Math.min(cw, (ch * BOARD_W) / BOARD_H)));
     });
     ro.observe(el);
     return () => ro.disconnect();

@@ -68,10 +68,14 @@ export default function Solve({ params }: { params: { hw: string } }) {
   const [railOpen, setRailOpenRaw] = useState(() => load("railOpen", true));
   const setRailOpen = (o: boolean) => { setRailOpenRaw(o); save("railOpen", o); };
   const [listFont, setListFont] = useScale("listFont");
-  // hint / explanation / answer render in the side panel, not on the board
+  // Keep help in a viewport-sized note on the writing surface.
   const [helpSlot, setHelpSlot] = useState<HTMLElement | null>(null);
   const [questionFont, setQuestionFont] = useScale("questionFont");
   const [zoom, setZoom] = useState<Figure | null>(null);
+
+  useEffect(() => {
+    if (window.matchMedia("(max-width: 1366px)").matches) setPanelOpen(false);
+  }, []);
 
   const angle = parseInt(problem.givenValues["θ"] ?? "30") || 30;
   const isRamp = problem.type === "inclined_plane";
@@ -219,16 +223,16 @@ export default function Solve({ params }: { params: { hw: string } }) {
 
   return (
     // fixed to the viewport: the page never scrolls or bounces under the Pencil
-    <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none">
+    <div className="solve-page fixed inset-0 flex flex-col overflow-hidden overscroll-none">
       <Topbar>
-        <div className="hidden items-center gap-3 text-[0.9rem] text-muted lg:flex">
+        <div className="hidden items-center gap-3 text-[0.9rem] text-muted 2xl:flex">
           <span className="max-w-[14rem] truncate whitespace-nowrap">{hw.title}</span>
           <ProgressBar fraction={fraction} label={`${hw.title} progress`} className="w-[9rem]" />
           <span className="hidden 2xl:inline-flex"><Dots total={hw.problems.length} done={doneCount} current={index} /></span>
         </div>
       </Topbar>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="solve-body relative flex min-h-0 flex-1">
         <ProblemPanel
           hw={hw}
           index={index}
@@ -240,11 +244,11 @@ export default function Solve({ params }: { params: { hw: string } }) {
           setFontScale={setListFont}
         />
 
-        <section key={turning} className={`flex min-w-0 flex-1 flex-col gap-3 px-6 pb-4 pt-4 ${turning ? "page-turn" : ""}`}>
+        <section key={turning} className={`solve-workspace flex min-h-0 min-w-0 flex-1 flex-col gap-3 px-6 pb-4 pt-4 ${turning ? "page-turn" : ""}`}>
           {/* problem: just the label, the question and the setup */}
-          <div className="flex items-start gap-5">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-3">
+          <div className="solve-question flex shrink-0 flex-wrap items-start gap-3">
+            <div className="solve-question-text min-w-0 flex-1 basis-[20rem]">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <div className="text-[1.15rem] text-tomato">Problem {index + 1}</div>
                 {problem.topic && <div className="text-[0.8rem] text-muted">{problem.topic}</div>}
                 <FontSizer value={questionFont} onChange={setQuestionFont} label="question text" />
@@ -261,7 +265,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
                 onClick={() => setZoom(f)}
                 className="hand wa shrink-0 overflow-hidden bg-white p-1 transition-transform hover:-rotate-1"
               >
-                <FigureImage figure={f} className="h-[6.5rem] w-[9rem]" />
+                <FigureImage figure={f} className="h-[4.5rem] w-[6.5rem]" />
               </button>
             ))}
             {isRamp ? (
@@ -357,25 +361,25 @@ export default function Solve({ params }: { params: { hw: string } }) {
                   <Tomato size={70} track />
                 </div>
               </InkCanvas>
+              <div ref={setHelpSlot} className="board-help" />
             </div>
           </FitBoard>
           <Toolbar ink={ink} tool={tool} setTool={setTool} color={color} setColor={setColor} size={size} setSize={setSize} />
         </section>
 
-        {/* rail: hide it to get a slim strip with just Check and the help bar */}
-        {railOpen ? (
-          <aside className="flex w-[12.5rem] shrink-0 flex-col gap-5 border-l-[1.5px] border-dashed border-rule bg-white px-5 py-4">
-            <button type="button" onClick={() => setRailOpen(false)} className="link self-end text-[0.8rem] text-muted">
-              Hide →
-            </button>
-            <Button variant="red" className="wa w-full !min-h-[3.4rem] !text-[1.5rem]" disabledReason={checkReason} onClick={() => runCheck()}>
-              Check
-            </Button>
-            {chk.error && <p role="alert" className="text-[0.85rem] text-tomato">{chk.error}</p>}
-            <HelpLevelBar level={level} onChange={setLevel} />
-            <Tally n={fbdCheck.hints + eqCheck.hints} />
-            <div ref={setHelpSlot} className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pb-2" />
-            {MOCK && <div className="text-[0.7rem] leading-snug text-faint">demo mode: feedback is simulated</div>}
+        <aside className={`solve-rail flex w-[12.5rem] shrink-0 flex-col gap-4 border-l-[1.5px] border-dashed border-rule bg-white px-5 py-4 ${railOpen ? "" : "solve-rail-collapsed"}`}>
+          <button type="button" onClick={() => setRailOpen(!railOpen)} className="solve-rail-toggle link self-end text-[0.8rem] text-muted" aria-label={railOpen ? "hide the side panel" : "show the side panel"}>
+            {railOpen ? "Hide →" : "← Show"}
+          </button>
+          <Button variant="red" className="wa w-full !min-h-[3.4rem] !text-[1.5rem]" disabledReason={checkReason} onClick={() => runCheck()}>
+            Check
+          </Button>
+          {chk.error && <p role="alert" className="solve-error text-[0.85rem] text-tomato">{chk.error}</p>}
+          <div className="solve-help-vertical"><HelpLevelBar level={level} onChange={setLevel} compact={!railOpen} /></div>
+          <div className="solve-help-horizontal"><HelpLevelBar level={level} onChange={setLevel} horizontal /></div>
+          <div className="solve-tally"><Tally n={fbdCheck.hints + eqCheck.hints} /></div>
+          <div className="solve-rail-actions mt-auto flex flex-col gap-3">
+            {MOCK && <div className="solve-demo text-[0.7rem] leading-snug text-faint">demo mode: feedback is simulated</div>}
             <Button className="wb w-full !text-[0.95rem]" onClick={saveNow}>
               Save progress
             </Button>
@@ -390,22 +394,8 @@ export default function Solve({ params }: { params: { hw: string } }) {
             <Button variant={problemDone ? "red" : "plain"} className="wc w-full !text-[0.95rem]" disabledReason={nextReason} onClick={next}>
               {index < hw.problems.length - 1 ? "Next question →" : "Finish →"}
             </Button>
-          </aside>
-        ) : (
-          <aside className="relative flex w-[5rem] shrink-0 flex-col items-center gap-5 border-l-[1.5px] border-dashed border-rule bg-white px-2 py-4">
-            {/* help pops out beside the slim strip */}
-            <div ref={setHelpSlot} className="absolute right-[calc(100%+0.5rem)] top-[9rem] z-20 max-h-[70%] w-[15rem] overflow-y-auto empty:hidden" />
-            <button type="button" onClick={() => setRailOpen(true)} className="link text-[0.8rem] text-muted" aria-label="show the side panel">
-              ← Show
-            </button>
-            <Button variant="red" className="wa w-full !min-h-[2.6rem] !px-1 !text-[0.95rem]" disabledReason={checkReason} onClick={() => runCheck()}>
-              Check
-            </Button>
-            <div className="w-full pl-2">
-              <HelpLevelBar level={level} onChange={setLevel} compact />
-            </div>
-          </aside>
-        )}
+          </div>
+        </aside>
       </div>
 
       {zoom && (

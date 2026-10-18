@@ -13,6 +13,7 @@ import { useAccountGate } from "@/lib/useAccountGate";
 import { STATUS_LINES } from "@/lib/tomato";
 import type { TomatoState } from "@/lib/types";
 import Button from "@/components/Button";
+import DueDateEdit from "@/components/DueDateEdit";
 import ProgressBar from "@/components/ProgressBar";
 import StrokeThumb from "@/components/StrokeThumb";
 import QuoteLine from "@/components/QuoteLine";
@@ -76,6 +77,7 @@ export default function Home() {
                 <Tomato size={64} state={CARD_TOMATO[hw.id] ?? 0} interactive={false} listen={false} track={false} />
               </div>
             </Link>
+            {!finished && hw.id.startsWith("hw-") && <DueDateEdit hw={hw} className="mt-2" />}
             {finished && (
               <Button variant="red" className="wa mt-3 w-full !min-h-[2.4rem] !text-[0.95rem]" disabledReason={exporting ? "making your PDF…" : null} onClick={() => exportPdf(hw)}>
                 {exporting === hw.id ? "making PDF…" : "Export PDF"}

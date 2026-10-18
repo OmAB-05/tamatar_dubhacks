@@ -149,6 +149,12 @@ export async function saveWorksheet(userId: string, hw: Homework): Promise<Homew
   return { ...hw, problems };
 }
 
+/** Moves a worksheet's due date (label + calendar day). */
+export async function updateWorksheetDue(id: string, due: string, dueDate: string): Promise<void> {
+  const { error } = await db().from("worksheets").update({ due, due_date: dueDate }).eq("id", id);
+  if (error) throw new Error(`Could not change the due date: ${error.message}`);
+}
+
 const signed = new Map<string, { url: string; until: number }>();
 
 /** "sb:<path>" → a signed URL (cached until shortly before it expires). Other srcs pass through. */

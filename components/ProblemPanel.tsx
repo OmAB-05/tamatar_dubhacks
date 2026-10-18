@@ -46,49 +46,55 @@ export default function ProblemPanel({
 }) {
   return (
     <aside
-      className="relative h-full shrink-0 overflow-hidden border-r-[1.5px] border-dashed border-rule bg-panel transition-[width] duration-300"
+      className="problem-panel relative h-full shrink-0 overflow-hidden border-r-[1.5px] border-dashed border-rule bg-panel transition-[width] duration-300"
       style={{ width: open ? "14.6rem" : "2.7rem", transitionTimingFunction: "var(--pop)" }}
     >
       {open ? (
-        <div className="flex h-full w-[14.6rem] flex-col gap-3 p-4">
-          <div className="hand wa flex-1 overflow-auto bg-white p-3 shadow-[3px_4px_0_#f6d9d5]">
-            <div className="mb-2 flex items-baseline justify-between text-[0.7rem] text-muted">
-              <span>{hw.title}</span>
-              <span>page one of one</span>
+        <>
+          <button type="button" aria-label="Close homework" className="problem-panel-backdrop" onClick={() => setOpen(false)} />
+          <div className="problem-panel-content flex h-full w-[14.6rem] flex-col gap-3 p-4">
+            <div className="hand wa flex-1 overflow-auto bg-white p-3 shadow-[3px_4px_0_#f6d9d5]">
+              <div className="mb-2 flex items-baseline justify-between text-[0.7rem] text-muted">
+                <span>{hw.title}</span>
+                <span>page one of one</span>
+              </div>
+              <ol className="flex flex-col gap-2" style={{ fontSize: `${0.72 * fontScale}rem` }}>
+                {hw.problems.map((p, i) => {
+                  const pr = progress[p.id];
+                  const done = isDone(p, pr);
+                  return (
+                    <li key={p.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelect(i);
+                          if (window.matchMedia("(max-width: 1366px)").matches) setOpen(false);
+                        }}
+                        className={`w-full rounded-lg p-2 text-left leading-snug text-ink-2 transition-colors ${
+                          i === index ? "bg-blush outline-dotted outline-2 outline-tomato" : "hover:bg-panel"
+                        }`}
+                      >
+                        <span className="mb-0.5 flex items-center justify-between text-[1.12em] text-ink">
+                          <span>problem {i + 1}</span>
+                          {done && <span className="text-good">✓</span>}
+                          {!done && hasDiagram(p) && pr?.fbd && <span className="text-[0.9em] text-muted">diagram ✓</span>}
+                        </span>
+                        {p.topic && <span className="mb-0.5 block text-[0.85em] text-muted">{p.topic}{p.figures?.length ? " · has a figure" : ""}</span>}
+                        {p.text}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
             </div>
-            <ol className="flex flex-col gap-2" style={{ fontSize: `${0.72 * fontScale}rem` }}>
-              {hw.problems.map((p, i) => {
-                const pr = progress[p.id];
-                const done = isDone(p, pr);
-                return (
-                  <li key={p.id}>
-                    <button
-                      type="button"
-                      onClick={() => onSelect(i)}
-                      className={`w-full rounded-lg p-2 text-left leading-snug text-ink-2 transition-colors ${
-                        i === index ? "bg-blush outline-dotted outline-2 outline-tomato" : "hover:bg-panel"
-                      }`}
-                    >
-                      <span className="mb-0.5 flex items-center justify-between text-[1.12em] text-ink">
-                        <span>problem {i + 1}</span>
-                        {done && <span className="text-good">✓</span>}
-                        {!done && hasDiagram(p) && pr?.fbd && <span className="text-[0.9em] text-muted">diagram ✓</span>}
-                      </span>
-                      {p.topic && <span className="mb-0.5 block text-[0.85em] text-muted">{p.topic}{p.figures?.length ? " · has a figure" : ""}</span>}
-                      {p.text}
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
+            <div className="flex items-center justify-between gap-2">
+              <button type="button" className="link text-[0.85rem] text-muted" onClick={() => setOpen(false)}>
+                ← Hide homework
+              </button>
+              {setFontScale && <FontSizer value={fontScale} onChange={setFontScale} label="problem list text" />}
+            </div>
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <button type="button" className="link text-[0.85rem] text-muted" onClick={() => setOpen(false)}>
-              ← Hide homework
-            </button>
-            {setFontScale && <FontSizer value={fontScale} onChange={setFontScale} label="problem list text" />}
-          </div>
-        </div>
+        </>
       ) : (
         <button
           type="button"

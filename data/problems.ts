@@ -562,7 +562,7 @@ export type Homework = {
   title: string;
   course: string;
   due: string | null; // null once turned in
-  dueDate?: string | null; // YYYY-MM-DD, uploaded worksheets only
+  dueDate?: string | null; // YYYY-MM-DD; drives the calendar, reminders and "x days late"
   problems: Problem[];
   createdAt?: string; // uploaded worksheets only
 };
@@ -570,10 +570,10 @@ export type Homework = {
 export const RAMPS = PROBLEMS;
 
 export const HOMEWORK: Homework[] = [
-  { id: "hw4", title: "HW 4 · Ramps", course: "Physics 121", due: "due Friday", problems: RAMPS },
-  { id: "hw5", title: "HW 5 · Energy & momentum", course: "Physics 121", due: "due next Wed", problems: ENERGY_MOMENTUM },
-  { id: "hw6", title: "HW 6 · Circles, gravity & rotation", course: "Physics 121", due: "due next Fri", problems: ROTATION },
-  { id: "hw3", title: "HW 3 · Newton's laws", course: "Physics 121", due: "due Monday", problems: FORCES },
+  { id: "hw4", title: "HW 4 · Ramps", course: "Physics 121", due: "due Fri, Oct 23", dueDate: "2026-10-23", problems: RAMPS },
+  { id: "hw5", title: "HW 5 · Energy & momentum", course: "Physics 121", due: "due Wed, Oct 28", dueDate: "2026-10-28", problems: ENERGY_MOMENTUM },
+  { id: "hw6", title: "HW 6 · Circles, gravity & rotation", course: "Physics 121", due: "due Fri, Oct 30", dueDate: "2026-10-30", problems: ROTATION },
+  { id: "hw3", title: "HW 3 · Newton's laws", course: "Physics 121", due: "due Mon, Oct 19", dueDate: "2026-10-19", problems: FORCES },
   { id: "hw2", title: "HW 2 · Kinematics", course: "Physics 121", due: "practice", problems: KINEMATICS },
 ];
 

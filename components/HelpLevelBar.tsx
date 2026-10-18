@@ -6,7 +6,7 @@ import type { HelpLevel } from "@/lib/types";
 const LABELS = ["mark", "hint", "explain", "answer"] as const;
 
 /** Hand-drawn 4-notch pencil slider with a red pen nib thumb (§3.6). Also 4 tappable labels. */
-export default function HelpLevelBar({ level, onChange, compact = false }: { level: HelpLevel; onChange: (l: HelpLevel) => void; compact?: boolean }) {
+export default function HelpLevelBar({ level, onChange, compact = false, horizontal = false }: { level: HelpLevel; onChange: (l: HelpLevel) => void; compact?: boolean; horizontal?: boolean }) {
   // compact: the slim rail when the right panel is hidden (initials instead of words)
   const STEP = compact ? 40 : 60;
   const track = useRef<HTMLDivElement>(null);
@@ -17,6 +17,22 @@ export default function HelpLevelBar({ level, onChange, compact = false }: { lev
     const l = Math.max(0, Math.min(3, i)) as HelpLevel;
     if (l !== level) onChange(l);
   };
+
+  if (horizontal) return (
+    <div role="group" aria-label="help level" className="flex min-w-0 flex-wrap gap-1">
+      {LABELS.map((label, i) => (
+        <button
+          key={label}
+          type="button"
+          aria-pressed={level === i}
+          onClick={() => onChange(i as HelpLevel)}
+          className={`min-h-[44px] flex-1 rounded-lg border px-2 text-[0.95rem] ${level === i ? "border-tomato bg-blush text-tomato" : "border-rule text-ink-2"}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="flex flex-col items-start">

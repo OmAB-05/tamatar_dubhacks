@@ -117,6 +117,62 @@ button { cursor: pointer; }
 .board-enter { animation: board-in 320ms var(--pop) both; }
 .page-turn { animation: page-turn 500ms ease-in-out both; transform-origin: left center; }
 
+/* The iPad workspace keeps the paper and its controls inside the visible viewport. */
+.solve-page { height: 100dvh; bottom: auto; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+.solve-question { max-height: 30%; overflow-y: auto; overscroll-behavior: contain; }
+.solve-rail { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.solve-help-horizontal, .problem-panel-backdrop { display: none; }
+.solve-rail-collapsed { width: 5rem; padding-inline: .4rem; }
+.solve-rail-collapsed > .btn { min-height: 44px !important; padding-inline: .2rem; font-size: .95rem !important; }
+.solve-rail-collapsed .solve-rail-actions, .solve-rail-collapsed .solve-tally { display: none; }
+.board-help {
+  position: absolute; z-index: 20; top: 12px; right: 12px;
+  display: flex; align-items: flex-start; width: min(22rem, 48%); height: calc(100% - 24px);
+  pointer-events: none; touch-action: pan-y;
+}
+.board-help:empty { display: none; }
+.board-help .help-note { transform: none; animation-name: fade-in; padding: .65rem; box-shadow: 3px 4px 0 rgba(0,0,0,.12); }
+.board-help .help-copy { touch-action: pan-y; overflow-wrap: anywhere; }
+
+@media (max-width: 1366px) {
+  .solve-page header > nav { display: none; }
+  .solve-page header > .lg\:hidden { display: block; }
+  .solve-workspace { gap: .5rem; padding: .75rem 1rem; }
+  .solve-page .problem-panel { width: 2.7rem !important; overflow: visible; z-index: 40; }
+  .solve-page .problem-panel-content {
+    position: absolute; inset: 0 auto 0 0; z-index: 1;
+    width: min(20rem, 85vw); background: var(--panel); box-shadow: 6px 0 20px rgba(31,26,23,.15);
+  }
+  .solve-page .problem-panel-backdrop { display: block; position: fixed; inset: 0; background: rgba(31,26,23,.2); }
+  .solve-rail { width: 10.5rem; gap: .65rem; padding: .75rem; }
+  .solve-rail-collapsed { width: 5rem; padding-inline: .4rem; }
+  .solve-rail-actions { gap: .5rem; }
+  .solve-rail-actions > .btn { min-height: 44px; }
+}
+
+@media (max-width: 1023px), (max-width: 1366px) and (orientation: portrait) {
+  .solve-body { display: grid; grid-template-columns: 2.7rem minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .solve-page .problem-panel { height: auto; align-self: stretch; }
+  .solve-question-text { flex-basis: 100%; }
+  .solve-question { max-height: 29dvh; gap: .4rem; }
+  .solve-rail, .solve-rail-collapsed {
+    display: grid; grid-template-columns: minmax(6rem, .3fr) minmax(0, 1fr);
+    width: 100%; grid-column: 1 / -1; border-left: 0; border-top: 1.5px dashed var(--rule);
+    gap: .5rem .75rem; padding: .5rem 1rem; overflow: visible;
+  }
+  .solve-rail > .btn { min-height: 44px !important; font-size: 1.2rem !important; }
+  .solve-rail-toggle, .solve-help-vertical, .solve-tally, .solve-demo { display: none; }
+  .solve-help-horizontal { display: block; align-self: center; }
+  .solve-rail .solve-rail-actions { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; gap: .5rem; }
+  .solve-error { grid-column: 1 / -1; grid-row: 3; max-height: 3rem; overflow-y: auto; }
+  .board-help { width: min(22rem, 55%); }
+}
+
+@media (max-width: 600px) {
+  .solve-workspace { padding-inline: .5rem; }
+  .board-help { right: 8px; top: 8px; width: calc(100% - 16px); height: calc(100% - 16px); }
+}
+
 /* ---------- Red pen (§3.5) ---------- */
 .draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw var(--dur, 550ms) var(--delay, 0ms) cubic-bezier(.4,.1,.3,1) forwards; }
 .bleed { animation: bleed 150ms var(--delay, 550ms) ease-out forwards; }

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { extractProblems, UPLOAD_TYPES } from "@/lib/api";
-import { isoOf } from "@/lib/due";
+import { dueText, isoOf } from "@/lib/due";
 import { cropFigures } from "@/lib/figures";
 import { useStore } from "@/lib/store";
 import type { Problem } from "@/lib/types";
@@ -14,12 +14,6 @@ import Tomato from "./Tomato";
 
 /** Today in the student's own time zone, as YYYY-MM-DD (what <input type="date"> uses). */
 const localToday = () => isoOf(new Date());
-
-/** "2026-10-24" → "due Sat, Oct 24" (parsed as a local calendar day, not UTC midnight). */
-const dueLabel = (date: string) => {
-  const [y, m, d] = date.split("-").map(Number);
-  return `due ${new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`;
-};
 
 /** Import modal: drop a worksheet (PDF or photo); problems and their figures become the app's own worksheet. */
 export default function ImportModal({ onClose }: { onClose: () => void }) {
@@ -68,7 +62,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       const id = `hw-${crypto.randomUUID()}`;
-      await store.addHomework({ id, title: file.replace(/\.(pdf|png|jpe?g)$/i, ""), course: "Your worksheet", due: dueLabel(dueDate), dueDate, problems: problems.filter((_, i) => picked.has(i)) });
+      await store.addHomework({ id, title: file.replace(/\.(pdf|png|jpe?g)$/i, ""), course: "Your worksheet", due: dueText(dueDate), dueDate, problems: problems.filter((_, i) => picked.has(i)) });
       onClose();
       router.push(`/solve/${id}`);
     } catch (err) {

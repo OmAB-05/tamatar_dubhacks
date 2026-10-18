@@ -5,7 +5,7 @@ import Tomato from "@/components/Tomato";
 import { load, save } from "@/lib/storage";
 import { VoicePlayer, type VoiceState } from "@/lib/voice";
 
-/** Reads exactly the revealed explanation; never reveals higher help levels. */
+/** Reads the revealed note; never reveals higher help levels. */
 export default function TamatarAgent({ explanation }: { explanation: string }) {
   const [voice, setVoice] = useState<VoiceState>({ status: "idle" });
   const [player] = useState(() => new VoicePlayer(setVoice));
@@ -28,7 +28,7 @@ export default function TamatarAgent({ explanation }: { explanation: string }) {
   const paused = voice.status === "paused";
 
   return (
-    <div className="mt-3 border-t border-dashed border-[rgba(31,26,23,.2)] pt-2" aria-label="Tamatar voice agent">
+    <div className="mb-2 shrink-0 border-b border-dashed border-[rgba(31,26,23,.2)] pb-2" aria-label="Tamatar voice agent">
       <div className="flex items-center gap-2">
         <Tomato size={46} interactive={false} listen={false} track={false} speaking={talking} />
         <div className="min-w-0 flex-1">
@@ -40,11 +40,9 @@ export default function TamatarAgent({ explanation }: { explanation: string }) {
             {loading ? "finding my voice…" : talking ? "let's work through this" : paused ? "take your time" : "your note, out loud"}
           </div>
         </div>
-      </div>
-      <div className="mt-2 flex flex-wrap gap-2">
         <button
           type="button"
-          className="btn btn-red wa !min-h-[2.3rem] !px-3 !text-[0.8rem]"
+          className="btn btn-red wa !min-h-[44px] shrink-0 !px-3 !text-[0.85rem]"
           aria-label={loading ? "Cancel speech" : talking ? "Pause explanation" : paused ? "Resume explanation" : "Listen to explanation"}
           onClick={() => {
             if (loading) player.stop();
@@ -55,12 +53,12 @@ export default function TamatarAgent({ explanation }: { explanation: string }) {
         >
           {loading ? "cancel" : talking ? "pause" : paused ? "resume" : "listen"}
         </button>
-        {(talking || paused) && (
-          <button type="button" className="link text-[0.75rem] text-ink-2" onClick={() => void player.speak(explanation)}>
-            start again
-          </button>
-        )}
       </div>
+      {(talking || paused) && (
+        <button type="button" className="link mt-1 text-[0.75rem] text-ink-2" onClick={() => void player.speak(explanation)}>
+          start again
+        </button>
+      )}
       <label className="mt-2 flex cursor-pointer items-start gap-2 text-[0.7rem] leading-snug text-ink-2">
         <input
           type="checkbox"
@@ -71,7 +69,7 @@ export default function TamatarAgent({ explanation }: { explanation: string }) {
             save("voiceAutoRead", event.target.checked);
           }}
         />
-        read new explanations aloud
+        read new notes aloud
       </label>
       {voice.error && <p role="alert" className="mt-2 break-words text-[0.7rem] leading-snug text-tomato">{voice.error}</p>}
     </div>

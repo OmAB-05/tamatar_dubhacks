@@ -23,8 +23,7 @@ type Props = {
   /** Points already drawn on the board (ink, the ramp, pinned thumbnails), in board units.
    *  The red-pen note is placed in empty space so it never covers any of them. */
   obstacles?: [number, number][];
-  /** Where the hint / explanation / answer go. If set, they render there (e.g. the side panel)
-   *  and only the short red note sits on the board, so help never covers the work. */
+  /** Optional bounded help host, separate from the ink surface so text can scroll by touch. */
   helpSlot?: HTMLElement | null;
 };
 
@@ -187,32 +186,41 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
     const el = colRef.current;
     const box = root.current;
     if (!geo || !el || !box || !box.clientWidth) return setNote(null);
-    const unit = BOARD_W / box.clientWidth;
-    setNote(placeNote(geo, el.offsetWidth * unit, el.offsetHeight * unit, obstacles));
-  }, [geo, level, obstacles]);
+    const measure = () => {
+      const unit = BOARD_W / box.clientWidth;
+      setNote(placeNote(geo, el.offsetWidth * unit, el.offsetHeight * unit, obstacles));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(box);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [geo, level, obstacles, helpSlot]);
   const arrow = geo && note && markText ? arrowPath(geo, note) : null;
 
   const help = wrong ? (
-    <div key={`help-${resultKey}`} className="flex w-full flex-col items-start gap-2">
-      {level >= 1 && result?.hint && (
-        <div className="sticky-note sticky-drop pointer-events-auto max-w-full text-left text-[0.85rem] leading-snug" style={{ rotate: "2deg" }}>
-          {normalizeForFont(result.hint)}
-          {level >= 2 && result.explanation && (
-            <div className="mt-2 border-t border-dashed border-[rgba(31,26,23,.2)] pt-2 text-ink-2">
-              <Explained text={normalizeForFont(result.explanation)} />
-              {!thinking && <TamatarAgent explanation={normalizeForFont(result.explanation)} />}
-            </div>
-          )}
-        </div>
-      )}
-      {level >= 3 && result?.fullSolution && (
-        <div className="solution slide-in pointer-events-auto max-h-[46vh] w-full overflow-auto border-[2px] border-[rgba(31,26,23,.7)] text-left text-[0.8rem] text-ink wb">
-          <div className="text-[0.7rem] text-tomato">full solution</div>
-          {normalizeForFont(result.fullSolution)
-            .split("\n")
-            .map((l, i) => (
-              <div key={i}>{l}</div>
-            ))}
+    <div key={`help-${resultKey}`} className="help-reveals flex max-h-full min-h-0 w-full flex-col items-start gap-2">
+      {level >= 1 && (result?.hint || (level >= 2 && result?.explanation) || (level >= 3 && result?.fullSolution)) && (
+        <div className="help-note sticky-note sticky-drop pointer-events-auto flex max-h-full min-h-0 w-full flex-col text-left text-[0.85rem] leading-snug">
+          {!thinking && <TamatarAgent explanation={normalizeForFont((level >= 2 && result.explanation) || result.hint || (level >= 3 && result.fullSolution) || "")} />}
+          <div className="help-copy min-h-0 overflow-y-auto overscroll-contain">
+            {normalizeForFont(result.hint || "")}
+            {level >= 2 && result.explanation && (
+              <div className="mt-2 border-t border-dashed border-[rgba(31,26,23,.2)] pt-2 text-ink-2">
+                <Explained text={normalizeForFont(result.explanation)} />
+              </div>
+            )}
+            {level >= 3 && result?.fullSolution && (
+              <div className="solution slide-in mt-3 w-full border-[2px] border-[rgba(31,26,23,.7)] text-left text-[0.8rem] text-ink wb">
+                <div className="text-[0.7rem] text-tomato">full solution</div>
+                {normalizeForFont(result.fullSolution)
+                  .split("\n")
+                  .map((l, i) => (
+                    <div key={i}>{l}</div>
+                  ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

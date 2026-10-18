@@ -5,6 +5,7 @@ import { HOMEWORK, MONDAY_SCRATCH, type Homework } from "@/data/problems";
 import * as cloud from "./cloud";
 import type { Account, Profile } from "./cloud";
 import type { PartProgress } from "./progress";
+import { dueText } from "./due";
 import { clearAll, load, save } from "./storage";
 import { onRight, onWrong, type TomatoMemory, type TomatoReactionKind } from "./tomato";
 import type { CheckResponse, HelpLevel, Stroke } from "./types";
@@ -43,6 +44,8 @@ type Store = {
   homework: Homework[];
   /** Saves an uploaded worksheet (to the account when signed in) and returns it as stored. */
   addHomework: (hw: Homework) => Promise<Homework>;
+  /** Moves an uploaded worksheet's due date (YYYY-MM-DD), on the account too when signed in. */
+  setDueDate: (id: string, dueDate: string) => Promise<void>;
   boards: Board[];
   saveBoard: (b: Board) => void;
   toast: (msg: string) => void;
@@ -264,6 +267,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     return stored;
   }, []);
 
+  const setDueDate = useCallback(async (id: string, dueDate: string) => {
+    const due = dueText(dueDate);
+    if (accountRef.current) await cloud.updateWorksheetDue(id, due, dueDate);
+    setImportedHomework((all) => {
+      const next = all.map((h) => (h.id === id ? { ...h, due, dueDate } : h));
+      save("homework", next);
+      return next;
+    });
+  }, []);
+
   const saveBoard = useCallback((b: Board) => {
     setBoards((all) => {
       const next = all.some((x) => x.id === b.id) ? all.map((x) => (x.id === b.id ? b : x)) : [...all, b];
@@ -287,9 +300,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Store>(
     () => ({
       ready, account, authReady, needsAccount: cloud.supabaseConfigured, signOut, profile, saveProfile, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak,
-      helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, homework: [...importedHomework, ...HOMEWORK], addHomework, boards, saveBoard, toast, resetAll,
+      helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, homework: [...importedHomework, ...HOMEWORK], addHomework, setDueDate, boards, saveBoard, toast, resetAll,
     }),
-    [ready, account, authReady, signOut, profile, saveProfile, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak, helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, importedHomework, addHomework, boards, saveBoard, toast, resetAll],
+    [ready, account, authReady, signOut, profile, saveProfile, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak, helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, importedHomework, addHomework, setDueDate, boards, saveBoard, toast, resetAll],
   );
 
   return (
