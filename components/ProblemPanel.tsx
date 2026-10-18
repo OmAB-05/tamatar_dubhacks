@@ -2,6 +2,7 @@
 
 import type { Homework } from "@/data/problems";
 import type { PartProgress } from "@/lib/store";
+import FontSizer from "./FontSizer";
 
 export function Dots({ total, done, current }: { total: number; done: number; current?: number }) {
   return (
@@ -31,7 +32,7 @@ export function Dots({ total, done, current }: { total: number; done: number; cu
 
 /** Fake PDF page with the problem list; collapses to a 52px rail (§4.6). */
 export default function ProblemPanel({
-  hw, index, progress, open, setOpen, onSelect,
+  hw, index, progress, open, setOpen, onSelect, fontScale = 1, setFontScale,
 }: {
   hw: Homework;
   index: number;
@@ -39,6 +40,9 @@ export default function ProblemPanel({
   open: boolean;
   setOpen: (o: boolean) => void;
   onSelect: (i: number) => void;
+  /** Text size of the problem list (1 = default). */
+  fontScale?: number;
+  setFontScale?: (v: number) => void;
 }) {
   return (
     <aside
@@ -52,7 +56,7 @@ export default function ProblemPanel({
               <span>{hw.title}</span>
               <span>page one of one</span>
             </div>
-            <ol className="flex flex-col gap-2">
+            <ol className="flex flex-col gap-2" style={{ fontSize: `${0.72 * fontScale}rem` }}>
               {hw.problems.map((p, i) => {
                 const pr = progress[p.id];
                 const done = pr?.fbd && pr?.equations;
@@ -61,14 +65,14 @@ export default function ProblemPanel({
                     <button
                       type="button"
                       onClick={() => onSelect(i)}
-                      className={`w-full rounded-lg p-2 text-left text-[0.72rem] leading-snug text-ink-2 transition-colors ${
+                      className={`w-full rounded-lg p-2 text-left leading-snug text-ink-2 transition-colors ${
                         i === index ? "bg-blush outline-dotted outline-2 outline-tomato" : "hover:bg-panel"
                       }`}
                     >
-                      <span className="mb-0.5 flex items-center justify-between text-[0.8rem] text-ink">
+                      <span className="mb-0.5 flex items-center justify-between text-[1.12em] text-ink">
                         <span>problem {i + 1}</span>
                         {done && <span className="text-good">✓</span>}
-                        {!done && pr?.fbd && <span className="text-[0.65rem] text-muted">diagram ✓</span>}
+                        {!done && pr?.fbd && <span className="text-[0.9em] text-muted">diagram ✓</span>}
                       </span>
                       {p.text}
                     </button>
@@ -77,9 +81,12 @@ export default function ProblemPanel({
               })}
             </ol>
           </div>
-          <button type="button" className="link self-start text-[0.85rem] text-muted" onClick={() => setOpen(false)}>
-            ← Hide homework
-          </button>
+          <div className="flex items-center justify-between gap-2">
+            <button type="button" className="link text-[0.85rem] text-muted" onClick={() => setOpen(false)}>
+              ← Hide homework
+            </button>
+            {setFontScale && <FontSizer value={fontScale} onChange={setFontScale} label="problem list text" />}
+          </div>
         </div>
       ) : (
         <button

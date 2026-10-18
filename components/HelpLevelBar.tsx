@@ -4,10 +4,11 @@ import { useRef } from "react";
 import type { HelpLevel } from "@/lib/types";
 
 const LABELS = ["mark", "hint", "explain", "answer"] as const;
-const STEP = 60;
 
 /** Hand-drawn 4-notch pencil slider with a red pen nib thumb (§3.6). Also 4 tappable labels. */
-export default function HelpLevelBar({ level, onChange }: { level: HelpLevel; onChange: (l: HelpLevel) => void }) {
+export default function HelpLevelBar({ level, onChange, compact = false }: { level: HelpLevel; onChange: (l: HelpLevel) => void; compact?: boolean }) {
+  // compact: the slim rail when the right panel is hidden (initials instead of words)
+  const STEP = compact ? 40 : 60;
   const track = useRef<HTMLDivElement>(null);
 
   const pick = (clientY: number) => {
@@ -19,7 +20,7 @@ export default function HelpLevelBar({ level, onChange }: { level: HelpLevel; on
 
   return (
     <div className="flex flex-col items-start">
-      <div className="mb-2 text-[0.95rem] text-muted">help</div>
+      <div className={`mb-2 text-muted ${compact ? "text-[0.75rem]" : "text-[0.95rem]"}`}>help</div>
       <div
         ref={track}
         className="relative cursor-pointer select-none"
@@ -75,10 +76,11 @@ export default function HelpLevelBar({ level, onChange }: { level: HelpLevel; on
             type="button"
             tabIndex={-1}
             onClick={() => onChange(i as HelpLevel)}
-            className={`absolute left-10 whitespace-nowrap text-[1.2rem] leading-none transition-colors ${i === level ? "text-tomato" : i < level ? "text-ink" : "text-muted"}`}
+            title={l}
+            className={`absolute left-10 whitespace-nowrap leading-none ${compact ? "text-[0.95rem]" : "text-[1.2rem]"} transition-colors ${i === level ? "text-tomato" : i < level ? "text-ink" : "text-muted"}`}
             style={{ top: 12 + i * STEP - 11 }}
           >
-            {l}
+            {compact ? l[0] : l}
           </button>
         ))}
       </div>

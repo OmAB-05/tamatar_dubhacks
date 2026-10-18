@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FitBoard from "@/components/Board";
 import Button from "@/components/Button";
+import FontSizer from "@/components/FontSizer";
 import HelpLevelBar from "@/components/HelpLevelBar";
 import InkCanvas, { type LoopBox, type Tool } from "@/components/InkCanvas";
 import Modal from "@/components/Modal";
@@ -20,12 +21,25 @@ import { useChecker } from "@/components/useChecker";
 import { MOCK } from "@/lib/api";
 import { BOARD_H, BOARD_W } from "@/lib/ink";
 import { exportHomeworkPdf } from "@/lib/pdf";
-import { rampSvg } from "@/lib/ramp";
+import { rampPoints, rampSvg } from "@/lib/ramp";
+import { load, save } from "@/lib/storage";
 import { useStore } from "@/lib/store";
 import type { HelpLevel, ProblemPart } from "@/lib/types";
 import { useInk } from "@/lib/useInk";
 
 const EMPTY_PROGRESS = { fbd: false, equations: false };
+
+// The diagram pinned on the equations board: bottom-right, about a third of the board wide.
+const THUMB = { w: 330, h: 330 * (BOARD_H / BOARD_W), m: 14 };
+const THUMB_PTS: [number, number][] = [];
+for (let x = BOARD_W - THUMB.m - THUMB.w; x <= BOARD_W - THUMB.m; x += 20)
+  for (let y = BOARD_H - THUMB.m - THUMB.h; y <= BOARD_H - THUMB.m; y += 20) THUMB_PTS.push([x, y]);
+
+/** A text-size preference kept in this browser (per viewer, not part of the homework). */
+function useScale(key: string) {
+  const [v, setV] = useState(() => load(key, 1));
+  return [v, (n: number) => { setV(n); save(key, n); }] as const;
+}
 
 const PLACEHOLDER: Record<ProblemPart, string> = {
   fbd: "",
@@ -47,6 +61,12 @@ export default function Solve({ params }: { params: { hw: string } }) {
   const [peek, setPeek] = useState(false);
   const [loop, setLoop] = useState<LoopBox | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [railOpen, setRailOpenRaw] = useState(() => load("railOpen", true));
+  const setRailOpen = (o: boolean) => { setRailOpenRaw(o); save("railOpen", o); };
+  const [listFont, setListFont] = useScale("listFont");
+  // hint / explanation / answer render in the side panel, not on the board
+  const [helpSlot, setHelpSlot] = useState<HTMLElement | null>(null);
+  const [questionFont, setQuestionFont] = useScale("questionFont");
 
   const angle = parseInt(problem.givenValues["θ"] ?? "30") || 30;
   const ramp = useMemo(() => rampSvg(angle), [angle]);
@@ -175,6 +195,13 @@ export default function Solve({ params }: { params: { hw: string } }) {
     return () => clearTimeout(t);
   }, [loop]);
 
+  // Everything already on the board, so the red-pen note lands in empty space.
+  const obstacles = useMemo(() => {
+    const pts: [number, number][] = part === "fbd" ? rampPoints(angle) : [...THUMB_PTS];
+    for (const st of ink.strokes) for (let i = 0; i < st.points.length; i += 2) pts.push([st.points[i][0], st.points[i][1]]);
+    return pts;
+  }, [part, angle, ink.strokes]);
+
   const ringBox = chk.result?.bbox;
   const feedback = chk.thinking || !!chk.result;
 
@@ -191,14 +218,28 @@ export default function Solve({ params }: { params: { hw: string } }) {
       </Topbar>
 
       <div className="flex min-h-0 flex-1">
-        <ProblemPanel hw={hw} index={index} progress={store.progress} open={panelOpen} setOpen={setPanelOpen} onSelect={selectProblem} />
+        <ProblemPanel
+          hw={hw}
+          index={index}
+          progress={store.progress}
+          open={panelOpen}
+          setOpen={setPanelOpen}
+          onSelect={selectProblem}
+          fontScale={listFont}
+          setFontScale={setListFont}
+        />
 
         <section key={turning} className={`flex min-w-0 flex-1 flex-col gap-3 px-6 pb-4 pt-4 ${turning ? "page-turn" : ""}`}>
           {/* problem: just the label, the question and the setup */}
           <div className="flex items-start gap-5">
             <div className="min-w-0 flex-1">
-              <div className="text-[1.15rem] text-tomato">Problem {index + 1}</div>
-              <p className="mt-1 text-[1rem] leading-snug text-ink-2">{problem.text}</p>
+              <div className="flex items-center gap-3">
+                <div className="text-[1.15rem] text-tomato">Problem {index + 1}</div>
+                <FontSizer value={questionFont} onChange={setQuestionFont} label="question text" />
+              </div>
+              <p className="mt-1 leading-snug text-ink-2" style={{ fontSize: `${questionFont}rem` }}>
+                {problem.text}
+              </p>
             </div>
             <button type="button" aria-label="show the ramp on the diagram board" onClick={() => setPart("fbd")} className="shrink-0 rounded-xl p-1 transition-colors hover:bg-blush">
               <RampDiagram angle={angle} width={120} />
@@ -238,6 +279,8 @@ export default function Solve({ params }: { params: { hw: string } }) {
                   successText={part === "fbd" ? `nice diagram, ${store.name || "friend"}!` : "you got it!"}
                   onMarkTap={() => level === 0 && setLevel(1)}
                   onCheckAgain={() => runCheck()}
+                  obstacles={obstacles}
+                  helpSlot={helpSlot}
                 />
                 {loop && (
                   <button
@@ -250,21 +293,28 @@ export default function Solve({ params }: { params: { hw: string } }) {
                     Check this?
                   </button>
                 )}
-                {/* FBD thumbnail pinned on the equations board */}
+                {/* your diagram, pinned bottom-right of the equations board (tap for full size) */}
                 {part === "equations" && (
                   <button
                     type="button"
                     aria-label="peek at your diagram"
                     onClick={() => setPeek(true)}
-                    className="hand wa absolute right-3 top-3 z-10 h-[4rem] w-[6.25rem] overflow-hidden bg-white shadow-[3px_4px_0_#f6d9d5]"
-                    style={{ animation: "board-in 400ms var(--pop) both" }}
+                    className="hand wa absolute z-10 overflow-hidden bg-white shadow-[3px_4px_0_#f6d9d5]"
+                    style={{
+                      right: `${(THUMB.m / BOARD_W) * 100}%`,
+                      bottom: `${(THUMB.m / BOARD_H) * 100}%`,
+                      width: `${(THUMB.w / BOARD_W) * 100}%`,
+                      aspectRatio: `${BOARD_W} / ${BOARD_H}`,
+                      animation: "board-in 400ms var(--pop) both",
+                    }}
                   >
+                    <span className="absolute left-2 top-1 text-[0.7rem] text-muted">your diagram</span>
                     <StrokeThumb strokes={fbdInk.strokes} underlay={ramp} className="h-full w-full" />
                   </button>
                 )}
                 {/* the tomato peeks in from the corner during feedback */}
                 <div
-                  className="absolute -bottom-5 -right-5 z-10 transition-transform duration-500"
+                  className="absolute -right-5 -top-5 z-10 transition-transform duration-500"
                   style={{ transform: feedback ? "translate(0,0) rotate(-8deg)" : "translate(30px, 40px) rotate(10deg) scale(.6)", opacity: feedback ? 1 : 0, transitionTimingFunction: "var(--pop)" }}
                 >
                   <Tomato size={70} track />
@@ -275,31 +325,50 @@ export default function Solve({ params }: { params: { hw: string } }) {
           <Toolbar ink={ink} tool={tool} setTool={setTool} color={color} setColor={setColor} size={size} setSize={setSize} />
         </section>
 
-        {/* rail */}
-        <aside className="flex w-[12.5rem] shrink-0 flex-col gap-5 border-l-[1.5px] border-dashed border-rule bg-white px-5 py-5">
-          <Button variant="red" className="wa w-full !min-h-[3.4rem] !text-[1.5rem]" disabledReason={checkReason} onClick={() => runCheck()}>
-            Check
-          </Button>
-          {chk.error && <p role="alert" className="text-[0.85rem] text-tomato">{chk.error}</p>}
-          <HelpLevelBar level={level} onChange={setLevel} />
-          <Tally n={fbdCheck.hints + eqCheck.hints} />
-          <div className="flex-1" />
-          {MOCK && <div className="text-[0.7rem] leading-snug text-faint">demo mode: feedback is simulated</div>}
-          <Button className="wb w-full !text-[0.95rem]" onClick={saveNow}>
-            Save progress
-          </Button>
-          <Button
-            variant={allDone ? "red" : "plain"}
-            className="wa w-full !text-[0.95rem]"
-            disabledReason={exporting ? "making your PDF…" : allDone ? null : `finish all ${hw.problems.length} problems to export (${doneCount} done)`}
-            onClick={exportPdf}
-          >
-            Export PDF
-          </Button>
-          <Button variant={prog.equations ? "red" : "plain"} className="wc w-full !text-[0.95rem]" disabledReason={nextReason} onClick={next}>
-            {index < hw.problems.length - 1 ? "Next question →" : "Finish →"}
-          </Button>
-        </aside>
+        {/* rail: hide it to get a slim strip with just Check and the help bar */}
+        {railOpen ? (
+          <aside className="flex w-[12.5rem] shrink-0 flex-col gap-5 border-l-[1.5px] border-dashed border-rule bg-white px-5 py-4">
+            <button type="button" onClick={() => setRailOpen(false)} className="link self-end text-[0.8rem] text-muted">
+              Hide →
+            </button>
+            <Button variant="red" className="wa w-full !min-h-[3.4rem] !text-[1.5rem]" disabledReason={checkReason} onClick={() => runCheck()}>
+              Check
+            </Button>
+            {chk.error && <p role="alert" className="text-[0.85rem] text-tomato">{chk.error}</p>}
+            <HelpLevelBar level={level} onChange={setLevel} />
+            <Tally n={fbdCheck.hints + eqCheck.hints} />
+            <div ref={setHelpSlot} className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pb-2" />
+            {MOCK && <div className="text-[0.7rem] leading-snug text-faint">demo mode: feedback is simulated</div>}
+            <Button className="wb w-full !text-[0.95rem]" onClick={saveNow}>
+              Save progress
+            </Button>
+            <Button
+              variant={allDone ? "red" : "plain"}
+              className="wa w-full !text-[0.95rem]"
+              disabledReason={exporting ? "making your PDF…" : allDone ? null : `finish all ${hw.problems.length} problems to export (${doneCount} done)`}
+              onClick={exportPdf}
+            >
+              Export PDF
+            </Button>
+            <Button variant={prog.equations ? "red" : "plain"} className="wc w-full !text-[0.95rem]" disabledReason={nextReason} onClick={next}>
+              {index < hw.problems.length - 1 ? "Next question →" : "Finish →"}
+            </Button>
+          </aside>
+        ) : (
+          <aside className="relative flex w-[5rem] shrink-0 flex-col items-center gap-5 border-l-[1.5px] border-dashed border-rule bg-white px-2 py-4">
+            {/* help pops out beside the slim strip */}
+            <div ref={setHelpSlot} className="absolute right-[calc(100%+0.5rem)] top-[9rem] z-20 max-h-[70%] w-[15rem] overflow-y-auto empty:hidden" />
+            <button type="button" onClick={() => setRailOpen(true)} className="link text-[0.8rem] text-muted" aria-label="show the side panel">
+              ← Show
+            </button>
+            <Button variant="red" className="wa w-full !min-h-[2.6rem] !px-1 !text-[0.95rem]" disabledReason={checkReason} onClick={() => runCheck()}>
+              Check
+            </Button>
+            <div className="w-full pl-2">
+              <HelpLevelBar level={level} onChange={setLevel} compact />
+            </div>
+          </aside>
+        )}
       </div>
 
       {peek && (

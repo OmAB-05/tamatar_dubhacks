@@ -40,12 +40,11 @@ function Example() {
               <svg className="absolute -inset-x-5 -inset-y-3 h-[calc(100%+24px)] w-[calc(100%+40px)] overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none">
                 <path
                   d="M60 3 C95 2 101 30 70 37 C40 42 2 38 2 20 C3 5 40 1 72 6"
-                  pathLength={1}
                   fill="none"
                   stroke="var(--ink)"
                   strokeWidth="2"
                   vectorEffect="non-scaling-stroke"
-                  className="draw"
+                  className="draw-px"
                   style={{ ["--delay" as string]: `${300 + EXAMPLE.length * per}ms`, ["--dur" as string]: "600ms" }}
                 />
               </svg>

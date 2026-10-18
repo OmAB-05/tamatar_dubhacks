@@ -72,7 +72,7 @@ function CircleArt() {
         <div className="relative text-[2rem]">
           a = 4.9 m/s²
           <svg className="absolute -inset-x-8 -inset-y-4 h-[calc(100%+2rem)] w-[calc(100%+4rem)] overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden>
-            <path d="M62 3 C96 2 101 31 70 37 C40 42 2 38 2 20 C3 5 40 0 74 6" pathLength={1} fill="none" stroke="var(--ink)" strokeWidth="3" vectorEffect="non-scaling-stroke" className="draw" style={{ ["--delay" as string]: "400ms", ["--dur" as string]: "700ms" }} />
+            <path d="M62 3 C96 2 101 31 70 37 C40 42 2 38 2 20 C3 5 40 0 74 6" fill="none" stroke="var(--tomato)" strokeWidth="3.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" className="draw-px" style={{ ["--delay" as string]: "400ms", ["--dur" as string]: "700ms" }} />
           </svg>
           <span className="btn btn-red absolute -right-36 -top-8 !text-[0.9rem]" style={{ animation: "pop-in 300ms var(--pop) 1300ms both" }}>
             Check this?

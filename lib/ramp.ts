@@ -32,3 +32,24 @@ export function rampSvg(angleDeg: number, ink = "#4a4340"): string {
 }
 
 export const RAMP_W = BOARD_W;
+
+/** Points along the drawn ramp, block and angle label, so red-pen notes can stay off them. */
+export function rampPoints(angleDeg: number): [number, number][] {
+  const g = rampGeometry(angleDeg);
+  const right = g.x0 + g.base;
+  const out: [number, number][] = [];
+  const seg = (x1: number, y1: number, x2: number, y2: number) => {
+    const n = Math.max(2, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 12));
+    for (let i = 0; i <= n; i++) out.push([x1 + ((x2 - x1) * i) / n, y1 + ((y2 - y1) * i) / n]);
+  };
+  seg(g.left, g.y0 - g.rise, right, g.y0);
+  seg(g.left, g.y0, right, g.y0);
+  seg(g.left, g.y0 - g.rise, g.left, g.y0);
+  // the block (filled, so sample its inside too)
+  const c = Math.cos(g.a), s = Math.sin(g.a);
+  for (let u = -70; u <= 70; u += 14)
+    for (let v = -96; v <= -2; v += 14) out.push([g.bx + u * c - v * s, g.by + u * s + v * c]);
+  // θ label and arc
+  for (let u = 0; u <= 120; u += 12) for (let v = 0; v <= 60; v += 12) out.push([right - 130 + u, g.y0 - 60 + v]);
+  return out;
+}

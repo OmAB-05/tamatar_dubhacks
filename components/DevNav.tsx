@@ -21,9 +21,9 @@ export default function DevNav() {
   const { tomato, setTomatoState, resetAll, react } = useStore();
   const [open, setOpen] = useState(false);
   return (
-    <div className="fixed bottom-2 left-1/2 z-[90] -translate-x-1/2 text-[0.7rem]">
+    <div className="fixed left-1/2 top-[3.6rem] z-[90] flex -translate-x-1/2 flex-col-reverse items-center text-[0.7rem]">
       {open && (
-        <div className="hand wa mb-2 flex w-52 flex-col gap-1 bg-white p-3 shadow-[3px_4px_0_#f6d9d5]" style={{ animation: "pop-in 200ms var(--pop) both", transformOrigin: "bottom center" }}>
+        <div className="hand wa mt-2 flex w-52 flex-col gap-1 bg-white p-3 shadow-[3px_4px_0_#f6d9d5]" style={{ animation: "pop-in 200ms var(--pop) both", transformOrigin: "top center" }}>
           {SCREENS.map(([href, label]) => (
             <Link key={href} href={href} className="rounded px-2 py-1 hover:bg-blush" onClick={() => setOpen(false)}>
               {label}
