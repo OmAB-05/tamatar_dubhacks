@@ -45,6 +45,29 @@ Results go to `datasets/eval/results/*.csv` and `datasets/eval/transcribe/*.json
 
 ## Caveats
 
+### Freehand diagram tolerance
+
+`check-v7` grades intended geometry, with tolerance for shaky shafts, approximate angles,
+arrowheads and label placement. Generate focused FBD regressions with:
+
+```bash
+python3 -I scripts/eval/generate_fbd_cases.py
+python3 -I scripts/eval/run_eval.py --model sonnet --yes-spend \
+  --labels datasets/eval/fbd-tolerance/labels --images datasets/eval/fbd-tolerance
+```
+
+The nine fixtures cover correct rough/coloured diagrams, normal forces clearly along or
+into the ramp, upward gravity, and a missing force in both regular and final checks.
+They test classification only: no localization boxes are annotated, so ignore bbox IoU
+for this set. Validate with real iPad sketches before claiming real handwriting accuracy.
+
+Validation on 2026-10-17: `claude-sonnet-5-5`, low effort, `check-v7` answered all nine
+cases correctly: 0/4 false accusations and 0/5 missed errors, with 5/5 error-key matches.
+Median latency was 3.33 s (maximum 4.25 s). These are synthetic classification results,
+not a measure of real handwriting or localization accuracy.
+
+### Synthetic handwriting limitations
+
 - Each line mixes glyphs from many writers. The excerpt has only about 320 MathWriting glyphs, so HASYv2 fills the gaps after skeletonizing to the same pen width. Some HASY digits are hard to read, for example an 8 that looks like a b. Use this set for localization and first-error accuracy, not as evidence that a model reads real handwriting.
 - The 1.5 MB excerpt yields only about 27 method-2 expressions, mostly not physics. For a meaningful confusion table, download the full 2.9 GB archive and pass `--mathwriting <root>`.
 - `transcribe.py` aligns characters with difflib after a LaTeX-to-plain conversion. If the model wraps its transcription in prose, that adds noise, so read the `observedRaw` field in the report.

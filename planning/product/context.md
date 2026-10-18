@@ -167,7 +167,17 @@ Put all of these in `lib/types.ts`. All three people code against these types.
 
 export type Point \= \[x: number, y: number, pressure: number\];
 
-export type Stroke \= { id: string; points: Point\[\]; tool: "pen" | "eraser" };
+export type DrawingTool = "pen" | "pencil" | "ruler" | "eraser";
+export type Stroke = {
+  id: string;
+  points: Point[];
+  tool: DrawingTool;
+  color?: string;
+  size?: number;
+  simulatePressure?: boolean;
+};
+// Optional styles preserve existing boards: defaults are black, size-7 pen.
+// Canvas, thumbnails, grading images and PDF export share the same renderer.
 
 // \---------- Problems \----------
 
@@ -335,7 +345,9 @@ tamatar/
 
 ## 8\. The check prompt (starting point — iterate on it)
 
-You are a strict but kind physics TA grading a student's handwritten work on an
+The runtime source of truth is [`lib/prompts.ts`](../../lib/prompts.ts), currently `check-v7`.
+
+You are a fair and encouraging physics TA grading a student's handwritten work on an
 
 inclined-plane problem. You will receive an image of their work.
 
@@ -350,6 +362,18 @@ REFERENCE: {reference\[part\]}
 FINAL ANSWER: {reference.finalAnswer}
 
 Find the FIRST incorrect step only. Do not list multiple errors.
+
+Grade general physics correctness, not drawing precision. Handwritten diagrams are sketches:
+
+- Accept wobbly or slightly curved shafts, rough arrowheads, small gaps at the object, and labels placed nearby.
+- Accept approximately perpendicular normal forces, approximately surface-parallel friction, and roughly downward gravity. A normal force need not be ruler-straight or exactly 90° to the surface. Use the whole diagram, labels, arrowheads, angle marks, and supporting equations to infer intent; do not measure pixel angles.
+- Read the actual ramp orientation: a ramp descending to the right has an outward normal pointing up-right; a ramp ascending to the right has an outward normal pointing up-left. Do not reject a valid mirrored diagram or infer direction from little bends in a shaft.
+- Ignore arrow lengths unless the problem explicitly requires a scale diagram. Colours, line widths, and pencil/pen styles are not physics errors.
+- Only flag clear conceptual contradictions: a normal force along or into the surface, upward gravity, friction in the clearly wrong direction, or an extra fictitious force. A label does not override a clearly contradictory arrow. If a rough sketch reasonably represents the right relationship, accept it.
+- A diagram check still requires the relevant forces; tolerance for drawing precision does not excuse a missing force. Do not demand equations or a numerical answer in the diagram part. For equations in progress, do not penalize missing later steps.
+- Accept equivalent equations and rounding to 2–3 significant figures, including rounded values carried into later steps. Ignore crossed-out work, and prefer the plausible correct reading of ambiguous handwriting.
+
+Examples: a shaky normal arrow roughly perpendicular to a ramp is correct; a slightly tilted downward gravity arrow is correct; a normal arrow clearly drawn along the ramp is still incorrect.
 
 \- For "fbd": check that each required force is present, points in the correct
 

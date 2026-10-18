@@ -4,6 +4,13 @@ import type { BBox, Point, Stroke } from "./types";
 /** Logical board size. Strokes are stored in these units so they scale with the board. */
 export const BOARD_W = 1000;
 export const BOARD_H = 640;
+export const INK_COLORS = [
+  { name: "Black", value: "#1f1a17" },
+  { name: "Blue", value: "#2456a6" },
+  { name: "Red", value: "#c2392d" },
+  { name: "Green", value: "#287447" },
+  { name: "Purple", value: "#7645a0" },
+] as const;
 
 export const PEN_OPTIONS = {
   size: 7,
@@ -33,8 +40,27 @@ export function outlineToPath(points: number[][]): string {
   return d + "Z";
 }
 
-export function strokePath(points: Point[], simulatePressure = false): string {
-  return outlineToPath(getStroke(points, { ...PEN_OPTIONS, simulatePressure }));
+export function strokePath(points: Point[], simulatePressure = false, style?: Pick<Stroke, "tool" | "size">): string {
+  const pencil = style?.tool === "pencil";
+  return outlineToPath(getStroke(points, {
+    ...PEN_OPTIONS,
+    size: (style?.size ?? PEN_OPTIONS.size) * (pencil ? 0.6 : 1),
+    thinning: style?.tool === "ruler" ? 0 : PEN_OPTIONS.thinning,
+    simulatePressure: style?.tool === "ruler" ? false : simulatePressure,
+  }));
+}
+
+export const savedStrokePath = (s: Stroke) => strokePath(s.points, s.simulatePressure ?? false, s);
+export const strokeColor = (s: Pick<Stroke, "color">) => /^#[0-9a-f]{6}$/i.test(s.color ?? "") ? s.color! : INK_COLORS[0].value;
+export const strokeOpacity = (s: Pick<Stroke, "tool">) => s.tool === "pencil" ? 0.72 : 1;
+
+/** Shift constrains a ruler line to 15° increments, measured in board space. */
+export function rulerEnd(start: Point, end: Point, snap: boolean): Point {
+  if (!snap) return [end[0], end[1], 0.5];
+  const dx = end[0] - start[0], dy = end[1] - start[1];
+  const angle = Math.round(Math.atan2(dy, dx) / (Math.PI / 12)) * (Math.PI / 12);
+  const length = Math.hypot(dx, dy);
+  return [start[0] + Math.cos(angle) * length, start[1] + Math.sin(angle) * length, 0.5];
 }
 
 export function bboxOf(strokes: Stroke[]): BBox | null {
@@ -52,7 +78,14 @@ export function bboxOf(strokes: Stroke[]): BBox | null {
 
 export function distToStroke(s: Stroke, x: number, y: number) {
   let best = Infinity;
-  for (const [px, py] of s.points) best = Math.min(best, Math.hypot(px - x, py - y));
+  for (let i = 0; i < s.points.length; i++) {
+    const [ax, ay] = s.points[i];
+    const [bx, by] = s.points[i + 1] ?? s.points[i];
+    const dx = bx - ax, dy = by - ay;
+    const length2 = dx * dx + dy * dy;
+    const t = length2 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / length2)) : 0;
+    best = Math.min(best, Math.hypot(x - ax - t * dx, y - ay - t * dy));
+  }
   return best;
 }
 
@@ -64,7 +97,7 @@ export function distToStroke(s: Stroke, x: number, y: number) {
 export async function exportPng(strokes: Stroke[], scale = 1.2, underlay = "", mime: "image/png" | "image/jpeg" = "image/png"): Promise<string> {
   const w = Math.round(BOARD_W * scale);
   const h = Math.round(BOARD_H * scale);
-  const paths = strokes.map((s) => `<path d="${strokePath(s.points)}" fill="#1f1a17"/>`).join("");
+  const paths = strokes.map((s) => `<path d="${savedStrokePath(s)}" fill="${strokeColor(s)}" opacity="${strokeOpacity(s)}"/>`).join("");
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${BOARD_W} ${BOARD_H}"><rect width="100%" height="100%" fill="#fff"/>${underlay}${paths}</svg>`;
   const img = new Image();
   img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
