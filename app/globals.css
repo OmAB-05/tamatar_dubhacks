@@ -6,7 +6,7 @@
 :root {
   --paper: #fff; --ink: #1f1a17; --ink-2: #4a4340; --muted: #6b6461; --faint: #9a918d;
   --tomato: #c2392d; --tomato-2: #d9473a; --tomato-dark: #9e2a20; --blush: #fdecea; --rule: #ebcfcb;
-  --grid: #f3e6e3; --sticky: #fff3a8; --high: #ffe58a; --good: #2e7d32; --panel: #faf6f5;
+  --grid: #f9f1ef; --sticky: #fff3a8; --high: #ffe58a; --good: #2e7d32; --panel: #faf6f5;
   --wa: 255px 15px 225px 15px/15px 225px 15px 255px;
   --wb: 15px 255px 15px 225px/225px 15px 255px 15px;
   --wc: 225px 25px 205px 20px/20px 205px 25px 225px;
@@ -17,8 +17,9 @@
 }
 
 /* ---------- One font, everywhere (§1) ---------- */
-html { font-size: 24px; }
-@media (max-width: 900px) { html { font-size: 20px; } }
+/* 80% of the spec's 24px / 20px base. Everything is in rem, so this one line scales the UI. */
+html { font-size: 19.2px; }
+@media (max-width: 900px) { html { font-size: 16px; } }
 html, body, button, input, textarea, select, svg text { font-family: var(--font) !important; }
 * { font-synthesis: none; font-weight: 400 !important; }
 body {
@@ -34,9 +35,9 @@ button { cursor: pointer; }
 .grid-paper {
   background-color: #fff;
   background-image:
-    linear-gradient(var(--grid) 1.5px, transparent 1.5px),
-    linear-gradient(90deg, var(--grid) 1.5px, transparent 1.5px);
-  background-size: 32px 32px;
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 1.6rem 1.6rem;
 }
 .wa { border-radius: var(--wa); }
 .wb { border-radius: var(--wb); }
@@ -56,7 +57,7 @@ button { cursor: pointer; }
 .btn {
   position: relative; overflow: hidden; isolation: isolate;
   display: inline-flex; align-items: center; justify-content: center; gap: .35em;
-  min-height: 44px; min-width: 44px; padding: .15em .8em;
+  min-height: 2.3rem; min-width: 2.3rem; padding: .15em .8em;
   font-size: 1.15rem; line-height: 1.1; color: var(--ink); background: #fff;
   border: 2.5px solid var(--ink); border-radius: var(--wb);
   transition: transform 220ms var(--pop), border-radius 220ms ease, box-shadow 220ms ease;
@@ -175,9 +176,9 @@ button { cursor: pointer; }
   position: relative; overflow-x: clip; min-height: 100vh;
   background-color: #fffcf8;
   background-image:
-    linear-gradient(var(--grid) 1.5px, transparent 1.5px),
-    linear-gradient(90deg, var(--grid) 1.5px, transparent 1.5px);
-  background-size: 32px 32px;
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 1.6rem 1.6rem;
 }
 /* paper grain, so it never reads as a flat web page (delight.md §2) */
 .lp::after {
@@ -270,3 +271,11 @@ button { cursor: pointer; }
 
 .lp-reveal { opacity: 0; }
 .lp-reveal.in { animation: deal-in 520ms var(--pop) both; }
+/* ---------- Landing ---------- */
+html { scroll-behavior: smooth; }
+.loop-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-loop 3.6s var(--loop-delay, 0s) ease-in-out infinite; }
+@keyframes draw-loop { 0% { stroke-dashoffset: 1; opacity: 1; } 40%, 80% { stroke-dashoffset: 0; opacity: 1; } 95%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes reveal-up { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes hero-drop { 0% { opacity: 0; transform: translateY(-60vh) scale(.6); } 60% { opacity: 1; transform: translateY(0) scale(1.06, .92); } 80% { transform: scale(.97, 1.04); } 100% { transform: none; } }
+@keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-18px) rotate(12deg); } }
+@keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }

@@ -8,6 +8,8 @@ import type { CheckResponse, HelpLevel, Stroke } from "./types";
 
 export type Board = { id: string; title: string; strokes: Stroke[] };
 export type PartProgress = { fbd: boolean; equations: boolean };
+/** The student's ink for one problem, saved so a break never loses work. */
+export type Answer = { fbd: Stroke[]; equations: Stroke[] };
 
 type Store = {
   ready: boolean;
@@ -23,6 +25,8 @@ type Store = {
   setHelpLevel: (l: HelpLevel) => void;
   progress: Record<string, PartProgress>;
   setProgress: (problemId: string, p: PartProgress) => void;
+  answers: Record<string, Answer>;
+  saveAnswer: (problemId: string, a: Answer) => void;
   homework: Homework[];
   addHomework: (hw: Homework) => void;
   boards: Board[];
@@ -43,6 +47,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [streak, setStreak] = useState(4);
   const [helpLevel, setHelpLevelRaw] = useState<HelpLevel>(0);
   const [progress, setProgressRaw] = useState<Record<string, PartProgress>>({});
+  const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [importedHomework, setImportedHomework] = useState<Homework[]>([]);
   const [boards, setBoards] = useState<Board[]>(DEFAULT_BOARDS);
   const [toastMsg, setToastMsg] = useState<{ msg: string; n: number } | null>(null);
@@ -54,6 +59,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setStreak(load("streak", 4));
     setHelpLevelRaw(load("helpLevel", 0));
     setProgressRaw(load("progress", {}));
+    setAnswers(load("answers", {}));
     setBoards(load("boards", DEFAULT_BOARDS));
     setImportedHomework(load("homework", []));
     setReady(true);
@@ -99,6 +105,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  const saveAnswer = useCallback((id: string, a: Answer) => {
+    setAnswers((all) => {
+      const next = { ...all, [id]: a };
+      save("answers", next);
+      return next;
+    });
+  }, []);
+
   const addHomework = useCallback((hw: Homework) => {
     setImportedHomework((all) => {
       const next = [...all, hw];
@@ -128,6 +142,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setStreak(4);
     setHelpLevelRaw(0);
     setProgressRaw({});
+    setAnswers({});
     setBoards(DEFAULT_BOARDS);
     setImportedHomework([]);
   }, []);
@@ -135,9 +150,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Store>(
     () => ({
       ready, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak,
-      helpLevel, setHelpLevel, progress, setProgress, homework: [...importedHomework, ...HOMEWORK], addHomework, boards, saveBoard, toast, resetAll,
+      helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, homework: [...importedHomework, ...HOMEWORK], addHomework, boards, saveBoard, toast, resetAll,
     }),
-    [ready, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak, helpLevel, setHelpLevel, progress, setProgress, importedHomework, addHomework, boards, saveBoard, toast, resetAll],
+    [ready, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak, helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, importedHomework, addHomework, boards, saveBoard, toast, resetAll],
   );
 
   return (

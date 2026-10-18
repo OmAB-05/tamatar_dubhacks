@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Topbar from "@/components/Topbar";
 import HelpLadder from "@/components/landing/HelpLadder";
 import HeroDemo from "@/components/landing/HeroDemo";
 import Reveal from "@/components/landing/Reveal";
 import TomatoPlayground from "@/components/landing/TomatoPlayground";
 import TomatoRain from "@/components/landing/TomatoRain";
-import TryCircle from "@/components/landing/TryCircle";
+import MeetTamatar from "@/components/landing/MeetTamatar";
 
 export const metadata: Metadata = {
   title: "tamatar.si: a notebook that grades you back",
@@ -38,26 +39,13 @@ export default function Landing() {
     <div className="lp">
       <div className="lp-margin" aria-hidden />
 
-      {/* nav */}
-      <header className="relative z-30 mx-auto flex max-w-[1180px] items-center gap-3 px-4 pt-5 sm:px-10">
-        <Link href="/" className="flex items-center gap-2 text-[1.5rem] leading-none" aria-label="tamatar.si home">
-          <img src="/logo.png" alt="" width={42} height={46} className="lp-logo" />
-          <span>
-            tamatar<span className="inline-block text-tomato" style={{ rotate: "-6deg" }}>.si</span>
-          </span>
-        </Link>
-        <nav className="ml-auto hidden items-center gap-6 text-[0.95rem] md:flex">
-          <a href="#how" className="lp-navlink">how it works</a>
-          <a href="#red-pen" className="lp-navlink">the red pen</a>
-          <a href="#tomato" className="lp-navlink">the tomato</a>
-        </nav>
-        <Link href="/home" className="btn btn-red wc ml-auto !text-[1rem] md:ml-4">
-          start writing
-        </Link>
-      </header>
+      <Topbar floating />
 
-      {/* hero */}
-      <section className="relative mx-auto grid max-w-[1180px] items-center gap-12 px-4 pb-24 pt-12 sm:px-10 lg:grid-cols-[1fr_1.05fr] lg:pt-16">
+      {/* meet tamatar: the first screen is just the tomato */}
+      <MeetTamatar />
+
+      {/* pitch */}
+      <section id="about" className="relative mx-auto grid scroll-mt-16 max-w-[1180px] items-center gap-12 px-4 pb-24 pt-12 sm:px-10 lg:grid-cols-[1fr_1.05fr] lg:pt-16">
         <div>
           <div className="sticky-note inline-block text-[0.85rem]" style={{ rotate: "-2deg" }}>
             for handwritten physics homework
@@ -96,7 +84,7 @@ export default function Landing() {
       </section>
 
       {/* how it works */}
-      <section id="how" className="lp-band relative scroll-mt-6 py-20">
+      <section id="how" className="lp-band relative scroll-mt-16 py-20">
         <div className="mx-auto max-w-[1180px] px-4 sm:px-10">
           <Reveal>
             <SectionHead kicker="how it works" title="three moves. no typing." />
@@ -117,9 +105,6 @@ export default function Landing() {
               </Reveal>
             ))}
           </div>
-          <Reveal className="mt-10">
-            <TryCircle />
-          </Reveal>
         </div>
       </section>
 

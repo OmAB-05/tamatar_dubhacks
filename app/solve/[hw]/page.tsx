@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FitBoard from "@/components/Board";
 import Button from "@/components/Button";
 import HelpLevelBar from "@/components/HelpLevelBar";
@@ -19,36 +19,18 @@ import Topbar from "@/components/Topbar";
 import { useChecker } from "@/components/useChecker";
 import { MOCK } from "@/lib/api";
 import { BOARD_H, BOARD_W } from "@/lib/ink";
+import { exportHomeworkPdf } from "@/lib/pdf";
+import { rampSvg } from "@/lib/ramp";
 import { useStore } from "@/lib/store";
-import type { HelpLevel, ProblemPart, Stroke } from "@/lib/types";
+import type { HelpLevel, ProblemPart } from "@/lib/types";
 import { useInk } from "@/lib/useInk";
 
 const EMPTY_PROGRESS = { fbd: false, equations: false };
 
 const PLACEHOLDER: Record<ProblemPart, string> = {
-  fbd: "draw the forces on the block as arrows",
+  fbd: "",
   equations: "write your equations here",
 };
-
-/** Given values as tappable chips: tap → a tiny sticky with the value to copy. */
-function Chip({ k, v }: { k: string; v: string }) {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    if (!open) return;
-    const t = setTimeout(() => setOpen(false), 2200);
-    return () => clearTimeout(t);
-  }, [open]);
-  return (
-    <button type="button" onClick={() => setOpen(true)} className="relative rounded-full border-[1.5px] border-dashed border-tomato bg-white px-2.5 py-0.5 text-[0.8rem]">
-      {k} = {v}
-      {open && (
-        <span className="sticky-note bubble absolute bottom-[calc(100%+6px)] left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[1.1rem]">
-          {k} = {v}
-        </span>
-      )}
-    </button>
-  );
-}
 
 export default function Solve({ params }: { params: { hw: string } }) {
   const router = useRouter();
@@ -62,35 +44,65 @@ export default function Solve({ params }: { params: { hw: string } }) {
   const [turning, setTurning] = useState(0);
   const [peek, setPeek] = useState(false);
   const [loop, setLoop] = useState<LoopBox | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const angle = parseInt(problem.givenValues["θ"] ?? "30") || 30;
+  const ramp = useMemo(() => rampSvg(angle), [angle]);
 
   const level = store.helpLevel;
   const fbdInk = useInk();
   const eqInk = useInk();
   const ink = part === "fbd" ? fbdInk : eqInk;
-  const fbdCheck = useChecker({ problem, part: "fbd", level });
+  const fbdCheck = useChecker({ problem, part: "fbd", level, underlay: ramp });
   const eqCheck = useChecker({ problem, part: "equations", level });
   const chk = part === "fbd" ? fbdCheck : eqCheck;
-  const saved = useRef<Record<string, { fbd: Stroke[]; equations: Stroke[] }>>({});
 
   const prog = store.progress[problem.id] ?? EMPTY_PROGRESS;
   const doneCount = hw.problems.filter((p) => store.progress[p.id]?.fbd && store.progress[p.id]?.equations).length;
+  const allDone = doneCount === hw.problems.length;
 
-  // Remember ink per problem so tapping around the PDF never loses work.
+  // Open on the first unfinished problem with its saved ink, once saved data has loaded.
+  const opened = useRef(false);
+  useEffect(() => {
+    if (!store.ready || opened.current) return;
+    opened.current = true;
+    const first = Math.max(0, hw.problems.findIndex((p) => !(store.progress[p.id]?.fbd && store.progress[p.id]?.equations)));
+    const p = hw.problems[first];
+    const a = store.answers[p.id];
+    fbdInk.reset(a?.fbd ?? []);
+    eqInk.reset(a?.equations ?? []);
+    setPart(store.progress[p.id]?.fbd ? "equations" : "fbd");
+    setIndex(first);
+  }, [store.ready, store.progress, store.answers, hw.problems, fbdInk, eqInk]);
+
+  // Autosave the current problem's ink so a break (or a reload) never loses work.
+  const { saveAnswer } = store;
+  useEffect(() => {
+    if (!opened.current) return;
+    const t = setTimeout(() => saveAnswer(problem.id, { fbd: fbdInk.strokes, equations: eqInk.strokes }), 500);
+    return () => clearTimeout(t);
+  }, [fbdInk.strokes, eqInk.strokes, problem.id, saveAnswer]);
+
+  const saveNow = () => {
+    saveAnswer(problem.id, { fbd: fbdInk.strokes, equations: eqInk.strokes });
+    store.toast(`saved. ${doneCount} of ${hw.problems.length} done, take a break`);
+  };
+
   const selectProblem = useCallback(
     (i: number) => {
       if (i === index) return;
-      saved.current[problem.id] = { fbd: fbdInk.strokes, equations: eqInk.strokes };
+      saveAnswer(problem.id, { fbd: fbdInk.strokes, equations: eqInk.strokes });
       const next = hw.problems[i];
-      const s = saved.current[next.id];
-      fbdInk.reset(s?.fbd ?? []);
-      eqInk.reset(s?.equations ?? []);
+      const a = store.answers[next.id];
+      fbdInk.reset(a?.fbd ?? []);
+      eqInk.reset(a?.equations ?? []);
       fbdCheck.reset();
       eqCheck.reset();
       setLoop(null);
       setPart(store.progress[next.id]?.fbd ? "equations" : "fbd");
       setIndex(i);
     },
-    [index, problem.id, fbdInk, eqInk, hw.problems, fbdCheck, eqCheck, store.progress],
+    [index, problem.id, fbdInk, eqInk, hw.problems, fbdCheck, eqCheck, store.progress, store.answers, saveAnswer],
   );
 
   const runCheck = useCallback(
@@ -103,10 +115,11 @@ export default function Solve({ params }: { params: { hw: string } }) {
         setTimeout(() => store.toast("on to the equations →"), 1400);
       } else {
         store.setProgress(problem.id, { fbd: true, equations: true });
-        setTimeout(() => store.toast(index < hw.problems.length - 1 ? "your tomato perked right up" : "homework done!"), 1400);
+        const finished = doneCount + 1 >= hw.problems.length;
+        setTimeout(() => store.toast(finished ? "homework done! export it as a PDF" : "your tomato perked right up"), 1400);
       }
     },
-    [chk, ink.strokes, part, store, problem.id, prog, index, hw.problems.length],
+    [chk, ink.strokes, part, store, problem.id, prog, doneCount, hw.problems.length],
   );
 
   const next = useCallback(() => {
@@ -115,12 +128,25 @@ export default function Solve({ params }: { params: { hw: string } }) {
     setTimeout(() => selectProblem(index + 1), 250);
   }, [index, hw.problems.length, router, selectProblem]);
 
+  const exportPdf = async () => {
+    setExporting(true);
+    try {
+      const answers = { ...store.answers, [problem.id]: { fbd: fbdInk.strokes, equations: eqInk.strokes } };
+      await exportHomeworkPdf(hw, answers, store.name);
+      store.toast("PDF saved. upload it to Canvas");
+    } catch {
+      store.toast("could not make the PDF. try again?");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const setLevel = (l: HelpLevel) => {
     store.setHelpLevel(l);
     chk.countReveal(l, !!chk.result && !chk.result.correct);
   };
 
-  const checkReason = chk.thinking ? "the red pen is still reading" : !ink.strokes.length ? "write your answer first" : null;
+  const checkReason = chk.thinking ? "the red pen is still reading" : !ink.strokes.length ? (part === "fbd" ? "draw the forces first" : "write your answer first") : null;
   const nextReason = prog.equations ? null : !prog.fbd ? "get the diagram right first" : "finish the equations first";
 
   // Keyboard: P pen · E eraser · ⌘Z / ⇧⌘Z · Enter check · 1–4 help · → next
@@ -130,6 +156,10 @@ export default function Solve({ params }: { params: { hw: string } }) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
         return e.shiftKey ? ink.redo() : ink.undo();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        return saveNow();
       }
       if (e.metaKey || e.ctrlKey) return;
       if (e.key === "p") setTool("pen");
@@ -155,10 +185,11 @@ export default function Solve({ params }: { params: { hw: string } }) {
   if (!store.ready) return null;
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
+    // fixed to the viewport: the page never scrolls or bounces under the Pencil
+    <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none">
       <Topbar>
-        <div className="hidden items-center gap-3 text-[0.9rem] text-muted lg:flex">
-          <span>{hw.title}</span>
+        <div className="hidden items-center gap-3 text-[0.9rem] text-muted xl:flex">
+          <span className="whitespace-nowrap">{hw.title}</span>
           <Dots total={hw.problems.length} done={doneCount} current={index} />
         </div>
       </Topbar>
@@ -167,18 +198,15 @@ export default function Solve({ params }: { params: { hw: string } }) {
         <ProblemPanel hw={hw} index={index} progress={store.progress} open={panelOpen} setOpen={setPanelOpen} onSelect={selectProblem} />
 
         <section key={turning} className={`flex min-w-0 flex-1 flex-col gap-3 px-6 pb-4 pt-4 ${turning ? "page-turn" : ""}`}>
-          {/* qbox */}
-          <div className="flex items-center gap-4 rounded-2xl border-2 border-dotted border-tomato bg-white px-5 py-3">
+          {/* problem: just the label, the question and the setup */}
+          <div className="flex items-start gap-5">
             <div className="min-w-0 flex-1">
-              <div className="text-[0.85rem] text-tomato">problem {index + 1}</div>
-              <p className="text-[19px] leading-snug tracking-[.01em] text-ink-2">{problem.text}</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {Object.entries(problem.givenValues).map(([k, v]) => (
-                  <Chip key={k} k={k} v={v} />
-                ))}
-              </div>
+              <div className="text-[1.15rem] text-tomato">Problem {index + 1}</div>
+              <p className="mt-1 text-[1rem] leading-snug text-ink-2">{problem.text}</p>
             </div>
-            <RampDiagram angle={parseInt(problem.givenValues.θ ?? "30")} width={150} />
+            <button type="button" aria-label="show the ramp on the diagram board" onClick={() => setPart("fbd")} className="shrink-0 rounded-xl p-1 transition-colors hover:bg-blush">
+              <RampDiagram angle={angle} width={120} />
+            </button>
           </div>
 
           <PartTabs part={part} locked={!prog.fbd} onChange={(p) => { setPart(p); setLoop(null); }} />
@@ -190,6 +218,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
                 tool={tool}
                 placeholder={PLACEHOLDER[part]}
                 className="hand wb overflow-visible"
+                background={part === "fbd" ? <g dangerouslySetInnerHTML={{ __html: ramp }} /> : undefined}
                 onStroke={() => chk.markStale()}
                 onCircle={(b) => setLoop(b)}
                 onEraseAt={(x, y) => {
@@ -198,6 +227,9 @@ export default function Solve({ params }: { params: { hw: string } }) {
                   if (inside) chk.dim();
                 }}
               >
+                {part === "fbd" && !fbdInk.strokes.length && (
+                  <div className="pointer-events-none absolute right-6 top-5 text-[1rem] text-faint">draw the forces on the block as arrows</div>
+                )}
                 <OverlayLayer
                   result={chk.result}
                   resultKey={chk.key}
@@ -221,15 +253,15 @@ export default function Solve({ params }: { params: { hw: string } }) {
                   </button>
                 )}
                 {/* FBD thumbnail pinned on the equations board */}
-                {part === "equations" && fbdInk.strokes.length > 0 && (
+                {part === "equations" && (
                   <button
                     type="button"
                     aria-label="peek at your diagram"
                     onClick={() => setPeek(true)}
-                    className="hand wa absolute right-3 top-3 z-10 h-[78px] w-[122px] overflow-hidden bg-white shadow-[3px_4px_0_#f6d9d5]"
+                    className="hand wa absolute right-3 top-3 z-10 h-[4rem] w-[6.25rem] overflow-hidden bg-white shadow-[3px_4px_0_#f6d9d5]"
                     style={{ animation: "board-in 400ms var(--pop) both" }}
                   >
-                    <StrokeThumb strokes={fbdInk.strokes} className="h-full w-full" />
+                    <StrokeThumb strokes={fbdInk.strokes} underlay={ramp} className="h-full w-full" />
                   </button>
                 )}
                 <div className="absolute bottom-3 left-3 z-10">
@@ -248,26 +280,37 @@ export default function Solve({ params }: { params: { hw: string } }) {
         </section>
 
         {/* rail */}
-        <aside className="flex w-[170px] shrink-0 flex-col gap-5 border-l-[1.5px] border-dashed border-rule bg-white px-4 py-5">
-          <Button variant="red" className="wa w-full !min-h-[64px] !text-[1.5rem]" disabledReason={checkReason} onClick={() => runCheck()}>
+        <aside className="flex w-[12.5rem] shrink-0 flex-col gap-5 border-l-[1.5px] border-dashed border-rule bg-white px-5 py-5">
+          <Button variant="red" className="wa w-full !min-h-[3.4rem] !text-[1.5rem]" disabledReason={checkReason} onClick={() => runCheck()}>
             Check
           </Button>
           {chk.error && <p role="alert" className="text-[0.85rem] text-tomato">{chk.error}</p>}
           <HelpLevelBar level={level} onChange={setLevel} />
           <Tally n={fbdCheck.hints + eqCheck.hints} />
           <div className="flex-1" />
-          {MOCK && <div className="sticky-note text-[0.6rem] leading-snug text-ink-2">Demo mode: feedback is simulated</div>}
-          <Button variant={prog.equations ? "red" : "plain"} className="wc w-full !text-[1rem]" disabledReason={nextReason} onClick={next}>
+          {MOCK && <div className="text-[0.7rem] leading-snug text-faint">demo mode: feedback is simulated</div>}
+          <Button className="wb w-full !text-[0.95rem]" onClick={saveNow}>
+            Save progress
+          </Button>
+          <Button
+            variant={allDone ? "red" : "plain"}
+            className="wa w-full !text-[0.95rem]"
+            disabledReason={exporting ? "making your PDF…" : allDone ? null : `finish all ${hw.problems.length} problems to export (${doneCount} done)`}
+            onClick={exportPdf}
+          >
+            Export PDF
+          </Button>
+          <Button variant={prog.equations ? "red" : "plain"} className="wc w-full !text-[0.95rem]" disabledReason={nextReason} onClick={next}>
             {index < hw.problems.length - 1 ? "Next question →" : "Finish →"}
           </Button>
         </aside>
       </div>
 
       {peek && (
-        <Modal onClose={() => setPeek(false)} className="!max-w-[900px]">
+        <Modal onClose={() => setPeek(false)} className="!max-w-[46rem]">
           <div className="mb-2 text-[1.2rem]">your diagram</div>
-          <div className="grid-paper hand wb">
-            <StrokeThumb strokes={fbdInk.strokes} className="h-auto w-full" />
+          <div className="hand wb bg-white">
+            <StrokeThumb strokes={fbdInk.strokes} underlay={ramp} className="h-auto w-full" />
           </div>
         </Modal>
       )}

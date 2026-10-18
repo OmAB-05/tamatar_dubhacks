@@ -1,9 +1,9 @@
 import type { Config } from "tailwindcss";
 
-// The spec sets html { font-size: 24px } so type scales in rem. Keep spacing in px so
-// Tailwind's p-4 / h-11 stay their usual size instead of growing 1.5×.
+// Spacing in rem, sized so p-4 / h-11 match Tailwind's usual px at a 24px root. The root
+// font size (globals.css) then scales type and spacing together.
 const steps = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 72, 80, 96];
-const spacing = Object.fromEntries([["px", "1px"], ...steps.map((n) => [String(n), `${n * 4}px`])]);
+const spacing = Object.fromEntries([["px", "1px"], ...steps.map((n) => [String(n), `${+((n * 4) / 24).toFixed(4)}rem`])]);
 
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],

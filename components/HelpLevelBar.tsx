@@ -4,7 +4,7 @@ import { useRef } from "react";
 import type { HelpLevel } from "@/lib/types";
 
 const LABELS = ["mark", "hint", "explain", "answer"] as const;
-const STEP = 46;
+const STEP = 60;
 
 /** Hand-drawn 4-notch pencil slider with a red pen nib thumb (§3.6). Also 4 tappable labels. */
 export default function HelpLevelBar({ level, onChange }: { level: HelpLevel; onChange: (l: HelpLevel) => void }) {
@@ -19,7 +19,7 @@ export default function HelpLevelBar({ level, onChange }: { level: HelpLevel; on
 
   return (
     <div className="flex flex-col items-start">
-      <div className="mb-1 text-[0.75rem] text-muted">help</div>
+      <div className="mb-2 text-[0.95rem] text-muted">help</div>
       <div
         ref={track}
         className="relative cursor-pointer select-none"
@@ -75,7 +75,7 @@ export default function HelpLevelBar({ level, onChange }: { level: HelpLevel; on
             type="button"
             tabIndex={-1}
             onClick={() => onChange(i as HelpLevel)}
-            className={`absolute left-9 whitespace-nowrap text-[0.9rem] leading-none transition-colors ${i === level ? "text-tomato" : i < level ? "text-ink" : "text-muted"}`}
+            className={`absolute left-10 whitespace-nowrap text-[1.2rem] leading-none transition-colors ${i === level ? "text-tomato" : i < level ? "text-ink" : "text-muted"}`}
             style={{ top: 12 + i * STEP - 11 }}
           >
             {l}

@@ -27,7 +27,7 @@ const EMPTY: CheckState = { result: null, key: 0, stale: false, dimmed: false, a
  * Check → thinking → red pen, for one board (§3.4–3.6). Also counts help reveals for the
  * tally: going up the ladder adds tallies, going down hides content but keeps them.
  */
-export function useChecker(opts: { problem: Problem | null; part: ProblemPart | "board"; level: HelpLevel }) {
+export function useChecker(opts: { problem: Problem | null; part: ProblemPart | "board"; level: HelpLevel; underlay?: string }) {
   const store = useStore();
   const [st, setSt] = useState<CheckState>(EMPTY);
   const [thinking, setThinking] = useState(false);
@@ -59,7 +59,7 @@ export function useChecker(opts: { problem: Problem | null; part: ProblemPart | 
       // Mock mode: circle the most recent mark, like a TA would circle the newest line.
       try {
         const bbox = bboxOf(lastGroup(strokes));
-        const imageBase64 = MOCK ? "" : await exportPng(strokes);
+        const imageBase64 = MOCK ? "" : await exportPng(strokes, 1.2, opts.underlay);
         const res = await checkWork(
           { imageBase64, problemId: opts.problem?.id ?? "board", part: opts.part === "board" ? "equations" : opts.part, problemToken: opts.problem?.checkToken, isFinal },
           { problem: opts.problem, part: opts.part, attempt: st.attempts, bbox },
@@ -84,7 +84,7 @@ export function useChecker(opts: { problem: Problem | null; part: ProblemPart | 
         }
       }
     },
-    [store, opts.problem, opts.part, opts.level, st.attempts, countReveal],
+    [store, opts.problem, opts.part, opts.level, opts.underlay, st.attempts, countReveal],
   );
 
   const reset = useCallback((next?: CheckState) => {

@@ -56,12 +56,16 @@ export function distToStroke(s: Stroke, x: number, y: number) {
   return best;
 }
 
-/** Rasterise strokes to a white PNG for /api/check. Returns base64 without the data: prefix. */
-export async function exportPng(strokes: Stroke[], scale = 1.2): Promise<string> {
+/**
+ * Rasterise strokes to a white PNG for /api/check. Returns base64 without the data: prefix.
+ * `underlay` is extra SVG markup in board units drawn under the ink (e.g. the ramp).
+ * `mime` "image/jpeg" gives a much smaller file (used for the PDF export).
+ */
+export async function exportPng(strokes: Stroke[], scale = 1.2, underlay = "", mime: "image/png" | "image/jpeg" = "image/png"): Promise<string> {
   const w = Math.round(BOARD_W * scale);
   const h = Math.round(BOARD_H * scale);
   const paths = strokes.map((s) => `<path d="${strokePath(s.points)}" fill="#1f1a17"/>`).join("");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${BOARD_W} ${BOARD_H}"><rect width="100%" height="100%" fill="#fff"/>${paths}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${BOARD_W} ${BOARD_H}"><rect width="100%" height="100%" fill="#fff"/>${underlay}${paths}</svg>`;
   const img = new Image();
   img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   await img.decode();
@@ -69,5 +73,5 @@ export async function exportPng(strokes: Stroke[], scale = 1.2): Promise<string>
   canvas.width = w;
   canvas.height = h;
   canvas.getContext("2d")!.drawImage(img, 0, 0);
-  return canvas.toDataURL("image/png").split(",")[1];
+  return canvas.toDataURL(mime, 0.82).split(",")[1];
 }
