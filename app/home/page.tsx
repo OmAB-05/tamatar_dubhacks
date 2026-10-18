@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { dueLabel } from "@/lib/due";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Homework } from "@/data/problems";
@@ -66,7 +67,7 @@ export default function Home() {
                   <div className="mt-1 text-[0.8rem] text-ink-2">
                     {hw.course} · {total} problem{total === 1 ? "" : "s"}
                     {figures ? ` · ${figures} figure${figures === 1 ? "" : "s"}` : ""}
-                    {hw.due ? ` · ${hw.due}` : ""}
+                    {dueLabel(hw) ? ` · ${dueLabel(hw)}` : ""}
                   </div>
                   <ProgressBar fraction={fraction} label={`${hw.title} progress`} className="mt-3" />
                   <div className="mt-1 text-[1rem]">{status}</div>

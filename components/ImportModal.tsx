@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { extractProblems, UPLOAD_TYPES } from "@/lib/api";
+import { dueFromDate, isoOf } from "@/lib/due";
 import { cropFigures } from "@/lib/figures";
 import { useStore } from "@/lib/store";
 import type { Problem } from "@/lib/types";
@@ -24,6 +25,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [due, setDue] = useState("");
 
   const take = async (f?: File | null) => {
     if (!f) return;
@@ -57,7 +59,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       const id = `hw-${crypto.randomUUID()}`;
-      await store.addHomework({ id, title: file.replace(/\.(pdf|png|jpe?g)$/i, ""), course: "Your worksheet", due: "ready to solve", problems: problems.filter((_, i) => picked.has(i)) });
+      await store.addHomework({ id, title: file.replace(/\.(pdf|png|jpe?g)$/i, ""), course: "Your worksheet", due: due ? dueFromDate(due) : "ready to solve", problems: problems.filter((_, i) => picked.has(i)) });
       onClose();
       router.push(`/solve/${id}`);
     } catch (err) {
@@ -145,6 +147,20 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                 </li>
               ))}
           </ul>
+          {!reading && problems.length > 0 && (
+            <label className="mt-4 flex flex-wrap items-center gap-3 border-t-[1.5px] border-dashed border-rule pt-4">
+              <span className="text-[1.05rem]">when is it due?</span>
+              <input
+                type="date"
+                value={due}
+                min={isoOf(new Date())}
+                onChange={(e) => setDue(e.target.value)}
+                className="hand wb min-h-[2.4rem] bg-white px-3 text-[1rem] text-ink"
+                aria-label="due date"
+              />
+              <span className="text-[0.8rem] text-muted">{due ? "it'll show up on your calendar" : "optional"}</span>
+            </label>
+          )}
           <div className="mt-5 flex justify-between">
             <button type="button" className="link text-[0.9rem] text-muted" disabled={reading || saving} onClick={() => { setFile(null); setError(null); }}>
               choose another file

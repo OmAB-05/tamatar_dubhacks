@@ -37,6 +37,7 @@ export function Wordmark() {
 const NAV = [
   { href: "/", label: "Home" },
   { href: "/home", label: "My homework" },
+  { href: "/calendar", label: "Calendar" },
   { href: "/tour", label: "Tutorial" },
   { href: "/#meet", label: "Meet Tamatar" },
   { href: "/team", label: "Meet Team" },
