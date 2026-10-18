@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import TamatarAgent from "@/components/TamatarAgent";
 import { BOARD_H, BOARD_W } from "@/lib/ink";
 import { THINKING_COPY } from "@/lib/mock";
 import { normalizeForFont } from "@/lib/normalize";
@@ -199,6 +200,7 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
           {level >= 2 && result.explanation && (
             <div className="mt-2 border-t border-dashed border-[rgba(31,26,23,.2)] pt-2 text-ink-2">
               <Explained text={normalizeForFont(result.explanation)} />
+              {!thinking && <TamatarAgent explanation={normalizeForFont(result.explanation)} />}
             </div>
           )}
         </div>

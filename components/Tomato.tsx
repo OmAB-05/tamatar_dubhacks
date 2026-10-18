@@ -30,6 +30,8 @@ type Props = {
   /** Eyes follow the pointer / pen. */
   track?: boolean;
   className?: string;
+  /** Animate the mouth while the explanation audio is playing. */
+  speaking?: boolean;
   onTap?: () => void;
   /** Gets each line the tomato says. When set, the page shows the line itself (no bubble). */
   onSay?: (line: string) => void;
@@ -37,7 +39,7 @@ type Props = {
 
 /** The tomato character (ui_planning.md §3.8, delight.md §3). */
 export default function Tomato({
-  state, size = 96, cssSize, bubbleClass = "text-[0.85rem]", interactive = true, listen = true, track = true, className = "", onTap, onSay,
+  state, size = 96, cssSize, bubbleClass = "text-[0.85rem]", interactive = true, listen = true, track = true, className = "", speaking = false, onTap, onSay,
 }: Props) {
   const store = useStore();
   const s = (state ?? store.tomato.state) as TomatoState;
@@ -212,7 +214,11 @@ export default function Tomato({
                 )}
               </g>
             </g>
-            <path d={MOUTH[s]} stroke="var(--ink)" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+            {speaking ? (
+              <ellipse className="tomato-speaking" cx="50" cy="69" rx="6" ry="5" fill="var(--ink)" />
+            ) : (
+              <path d={MOUTH[s]} stroke="var(--ink)" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+            )}
             </g>
           </g>
           {anim?.kind === "flinch" || anim?.kind === "rot" ? (

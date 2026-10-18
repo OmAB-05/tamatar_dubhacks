@@ -11,6 +11,18 @@ import FigureImage from "./FigureImage";
 import Modal from "./Modal";
 import Tomato from "./Tomato";
 
+/** Today in the student's own time zone, as YYYY-MM-DD (what <input type="date"> uses). */
+const localToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+/** "2026-10-24" → "due Sat, Oct 24" (parsed as a local calendar day, not UTC midnight). */
+const dueLabel = (date: string) => {
+  const [y, m, d] = date.split("-").map(Number);
+  return `due ${new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}`;
+};
+
 /** Import modal: drop a worksheet (PDF or photo); problems and their figures become the app's own worksheet. */
 export default function ImportModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
@@ -24,6 +36,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [dueDate, setDueDate] = useState("");
 
   const take = async (f?: File | null) => {
     if (!f) return;
@@ -57,7 +70,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       const id = `hw-${crypto.randomUUID()}`;
-      await store.addHomework({ id, title: file.replace(/\.(pdf|png|jpe?g)$/i, ""), course: "Your worksheet", due: "ready to solve", problems: problems.filter((_, i) => picked.has(i)) });
+      await store.addHomework({ id, title: file.replace(/\.(pdf|png|jpe?g)$/i, ""), course: "Your worksheet", due: dueLabel(dueDate), dueDate, problems: problems.filter((_, i) => picked.has(i)) });
       onClose();
       router.push(`/solve/${id}`);
     } catch (err) {
@@ -145,13 +158,26 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                 </li>
               ))}
           </ul>
+          {!reading && problems.length > 0 && (
+            <label className="mt-4 flex flex-wrap items-center gap-3 text-[1rem]">
+              <span>when is it due?</span>
+              <input
+                type="date"
+                required
+                min={localToday()}
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="hand wa bg-white px-3 py-1 text-[1rem] outline-none focus:border-tomato"
+              />
+            </label>
+          )}
           <div className="mt-5 flex justify-between">
             <button type="button" className="link text-[0.9rem] text-muted" disabled={reading || saving} onClick={() => { setFile(null); setError(null); }}>
               choose another file
             </button>
             <Button
               variant="red"
-              disabledReason={reading ? "still reading the worksheet" : saving ? "saving your worksheet…" : !problems.length || picked.size === 0 ? "pick at least one problem" : null}
+              disabledReason={reading ? "still reading the worksheet" : saving ? "saving your worksheet…" : !problems.length || picked.size === 0 ? "pick at least one problem" : !dueDate ? "pick a due date" : dueDate < localToday() ? "pick a due date that hasn't passed" : null}
               onClick={create}
             >
               {saving ? "Saving…" : "Create worksheet"}

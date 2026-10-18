@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:tools": "node --import tsx --test scripts/tests/tools.test.ts"
+    "test:tools": "node --import tsx --test scripts/tests/tools.test.ts",
+    "test:voice": "node --import tsx --test scripts/tests/voice.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.135.0",

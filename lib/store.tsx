@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { HOMEWORK, MONDAY_SCRATCH, type Homework } from "@/data/problems";
 import * as cloud from "./cloud";
-import type { Account } from "./cloud";
+import type { Account, Profile } from "./cloud";
 import type { PartProgress } from "./progress";
 import { clearAll, load, save } from "./storage";
 import { onRight, onWrong, type TomatoMemory, type TomatoReactionKind } from "./tomato";
@@ -23,6 +23,9 @@ type Store = {
   /** true when the app needs an account (Supabase is configured). */
   needsAccount: boolean;
   signOut: () => Promise<void>;
+  /** Onboarding details: null = not onboarded yet, undefined = unknown (still loading, or couldn't load). */
+  profile: Profile | null | undefined;
+  saveProfile: (p: Profile) => Promise<void>;
   name: string;
   setName: (n: string) => void;
   tomato: TomatoMemory;
@@ -67,6 +70,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
   const [account, setAccount] = useState<Account | null>(null);
   const [authReady, setAuthReady] = useState(!cloud.supabaseConfigured);
+  const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
 
   // Latest values for the debounced cloud sync, which runs outside React renders.
   const accountRef = useRef<Account | null>(null);
@@ -139,6 +143,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       accountRef.current = next;
       if (!live) return;
       setAccount(next);
+      setProfile(undefined);
+      if (next) cloud.loadProfile().then((p) => live && accountRef.current?.id === next.id && setProfile(p)).catch(() => {});
       if (!next) {
         if (prev || load<string | null>("owner", null)) {
           // signed out: don't leave one person's homework in the browser for the next
@@ -185,6 +191,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     await flush();
     await cloud.signOut();
   }, [flush]);
+
+  const saveProfile = useCallback(async (p: Profile) => {
+    const user = accountRef.current;
+    if (!user) throw new Error("Log in first.");
+    await cloud.saveProfile(user.id, p);
+    setProfile(p);
+  }, []);
 
   const setName = useCallback((n: string) => {
     setNameRaw(n);
@@ -273,10 +286,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Store>(
     () => ({
-      ready, account, authReady, needsAccount: cloud.supabaseConfigured, signOut, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak,
+      ready, account, authReady, needsAccount: cloud.supabaseConfigured, signOut, profile, saveProfile, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak,
       helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, homework: [...importedHomework, ...HOMEWORK], addHomework, boards, saveBoard, toast, resetAll,
     }),
-    [ready, account, authReady, signOut, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak, helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, importedHomework, addHomework, boards, saveBoard, toast, resetAll],
+    [ready, account, authReady, signOut, profile, saveProfile, name, setName, tomato, setTomatoState, reaction, react, applyCheck, streak, helpLevel, setHelpLevel, progress, setProgress, answers, saveAnswer, importedHomework, addHomework, boards, saveBoard, toast, resetAll],
   );
 
   return (

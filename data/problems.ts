@@ -562,6 +562,7 @@ export type Homework = {
   title: string;
   course: string;
   due: string | null; // null once turned in
+  dueDate?: string | null; // YYYY-MM-DD, uploaded worksheets only
   problems: Problem[];
   createdAt?: string; // uploaded worksheets only
 };

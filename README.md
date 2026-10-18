@@ -102,6 +102,8 @@ Edit `.env.local` and set `ANTHROPIC_API_KEY`. Both routes use Claude Sonnet 5.5
 
 Optional model, effort, and timeout settings are documented in [.env.example](.env.example). Never commit actual keys.
 
+For Tamatar's voice, set `ELEVENLABS_API_KEY` in `.env.local` and restart the dev server. Optionally set `ELEVENLABS_VOICE_ID` to a voice from your ElevenLabs account; the default is Roger. The `/api/speak` route uses [ElevenLabs text to speech](https://elevenlabs.io/docs/api-reference/text-to-speech/stream) with a server-side key. When you reveal **explain**, Tamatar reads the explanation on the yellow sticky note. Use **listen**, **pause**, **resume**, or **start again** to control playback, or uncheck **read new explanations aloud** to disable automatic reading. If your browser blocks autoplay, tap **listen**. Closing the explanation or changing problems stops speech; replaying a note reuses its audio.
+
 ```bash
 npm run dev
 ```
@@ -122,6 +124,7 @@ Available project checks:
 ```bash
 npm run typecheck
 npm run lint
+npm run test:voice
 npm run build
 ```
 

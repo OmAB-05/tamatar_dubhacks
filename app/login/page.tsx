@@ -34,9 +34,10 @@ function Login() {
   const [confirm, setConfirm] = useState(false);
   const newAccount = useRef(false);
 
-  // Signed in (just now, already, or via an email confirmation link): go on. New accounts take the tour.
+  // Signed in (just now, already, or via an email confirmation link): go on. New accounts
+  // onboard (phone, school), then take the tour.
   useEffect(() => {
-    if (authReady && account) router.replace(!account.name ? "/welcome" : newAccount.current ? "/tour" : next);
+    if (authReady && account) router.replace(!account.name ? "/welcome" : newAccount.current ? "/onboarding?next=/tour" : next);
   }, [authReady, account, next, router]);
 
   const reason = busy

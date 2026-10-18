@@ -81,23 +81,45 @@ export async function updateName(name: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+// ---------- Profile (onboarding) ----------
+
+/** Filled in once after sign-up (app/onboarding). */
+export type Profile = { email: string; phone: string; institution: string; timezone: string };
+
+type ProfileRow = { email: string; phone: string; institution: string; timezone: string };
+
+/** null until the student finishes onboarding. */
+export async function loadProfile(): Promise<Profile | null> {
+  const { data, error } = await db().from("profiles").select("email, phone, institution, timezone").maybeSingle();
+  if (error) throw new Error(`Could not load your profile: ${error.message}`);
+  if (!data) return null;
+  const r = data as ProfileRow;
+  return { email: r.email, phone: r.phone, institution: r.institution, timezone: r.timezone };
+}
+
+export async function saveProfile(userId: string, p: Profile): Promise<void> {
+  const { error } = await db()
+    .from("profiles")
+    .upsert(
+      { user_id: userId, email: p.email, phone: p.phone, institution: p.institution, timezone: p.timezone },
+      { onConflict: "user_id" },
+    );
+  if (error) throw new Error(/profiles_phone_idx/.test(error.message) ? "That phone number is already on another account." : `Could not save your profile: ${error.message}`);
+}
+
 // ---------- Worksheets ----------
 
-type WorksheetRow = { id: string; title: string; course: string; due: string | null; problems: Homework["problems"]; created_at: string };
+type WorksheetRow = { id: string; title: string; course: string; due: string | null; due_date: string | null; problems: Homework["problems"]; created_at: string };
 
 export async function loadWorksheets(): Promise<Homework[]> {
   const { data, error } = await db()
     .from("worksheets")
-    .select("id, title, course, due, problems, created_at")
+    .select("id, title, course, due, due_date, problems, created_at")
     .order("created_at", { ascending: false });
   if (error) throw new Error(`Could not load your worksheets: ${error.message}`);
-  return (data as WorksheetRow[]).map((r) => ({ id: r.id, title: r.title, course: r.course, due: r.due, problems: r.problems, createdAt: r.created_at }));
+  return (data as WorksheetRow[]).map((r) => ({ id: r.id, title: r.title, course: r.course, due: r.due, dueDate: r.due_date, problems: r.problems, createdAt: r.created_at }));
 }
 
-/**
- * Upload each data: URL figure to storage (replacing it with an "sb:" path), then save
- * the worksheet row. Returns the worksheet as stored.
- */
 /**
  * Upload each data: URL figure to storage (replacing it with an "sb:" path), then save
  * the worksheet row. Returns the worksheet as stored.
@@ -121,7 +143,7 @@ export async function saveWorksheet(userId: string, hw: Homework): Promise<Homew
       return { ...p, figures };
     }),
   );
-  const row = { id: hw.id, title: hw.title.slice(0, 200), course: hw.course, due: hw.due, problems };
+  const row = { id: hw.id, title: hw.title.slice(0, 200), course: hw.course, due: hw.due, due_date: hw.dueDate ?? null, problems };
   const { error } = await supabase.from("worksheets").insert(row);
   if (error) throw new Error(`Could not save the worksheet: ${error.message}`);
   return { ...hw, problems };

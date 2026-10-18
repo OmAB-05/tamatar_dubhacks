@@ -51,6 +51,17 @@ button { cursor: pointer; }
   box-shadow: 2px 3px 0 rgba(0,0,0,.08); transform: rotate(-1deg);
 }
 .red-note { color: var(--tomato); }
+.tomato-speaking { transform-box: fill-box; transform-origin: center; animation: tomato-talk 220ms ease-in-out infinite alternate; }
+.voice-wave { display: inline-flex; align-items: center; gap: 3px; height: 16px; }
+.voice-wave i { display: block; width: 3px; height: 12px; border-radius: 2px; background: var(--tomato); animation: voice-wave 600ms ease-in-out infinite alternate; }
+.voice-wave i:nth-child(2) { animation-delay: -150ms; }
+.voice-wave i:nth-child(3) { animation-delay: -300ms; }
+.voice-wave i:nth-child(4) { animation-delay: -450ms; }
+@keyframes tomato-talk { to { transform: scaleY(.35); } }
+@keyframes voice-wave { to { transform: scaleY(.25); } }
+@media (prefers-reduced-motion: reduce) {
+  .tomato-speaking, .voice-wave i { animation: none; }
+}
 .hl { background: linear-gradient(var(--high), var(--high)) no-repeat 0 60% / 0% 70%; animation: highlighter .5s .2s ease-out forwards; }
 
 /* ---------- Buttons (§3.2) ---------- */
