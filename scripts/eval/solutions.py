@@ -11,7 +11,8 @@ Line markup (rendered by generate_cases.py):
 
 A mutation replaces lines from `line` (1-based) onward: the first replaced
 line is the first error, and later lines carry its consequences forward the
-way a student would, so the first-error line is unambiguous.
+way a student would, so the first-error line is unambiguous. When the first
+replaced line is still a true statement, `error_line` names the first wrong one.
 """
 
 from __future__ import annotations
@@ -23,11 +24,18 @@ from dataclasses import dataclass
 class Mutation:
     key: str  # short id used in case names
     error_key: str  # one of ERROR_KEYS in lib/parse.ts
-    line: int  # 1-based first-error line
+    line: int  # 1-based first replaced line
     replacement: tuple[str, ...]  # new lines from `line` onward
     # Other ERROR_KEYS a fair grader could pick for the same mistake.
     also_accept: tuple[str, ...] = ()
-    token: str | None = None  # substring of the first replaced line that is wrong, for a tight box
+    token: str | None = None  # substring of the first-error line that is wrong, for a tight box
+    # First wrong line when it comes after `line`, i.e. the replacement opens with a
+    # step that is still true on its own (F sin θ = 25 N is right; using it along the ramp is not).
+    error_line: int | None = None
+
+    @property
+    def first_error(self) -> int:
+        return self.error_line or self.line
 
 
 @dataclass(frozen=True)
@@ -166,7 +174,7 @@ SOLUTIONS: tuple[Solution, ...] = (
                     "25 − 24.5 = 5a",
                     "a = 0.5 / 5 = 0.1 m/s^2",
                 ),
-                token="sin",
+                token="F sin θ", error_line=4,
             ),
             Mutation("normal_force_equals_mg", "normal_force_equals_mg", 3, ("N = mg = 49 N",), token="mg = 49"),
             Mutation(

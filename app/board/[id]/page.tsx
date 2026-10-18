@@ -20,6 +20,8 @@ export default function BoardPage({ params }: { params: { id: string } }) {
   const board = store.boards.find((b) => b.id === params.id);
   const ink = useInk(board?.strokes ?? []);
   const [tool, setTool] = useState<Tool>("pen");
+  const [color, setColor] = useState("#1f1a17");
+  const [size, setSize] = useState(7);
   const [title, setTitle] = useState(board?.title ?? "untitled board");
   const chk = useChecker({ problem: null, part: "board", level: store.helpLevel });
   const loaded = useRef(!!board);
@@ -57,9 +59,9 @@ export default function BoardPage({ params }: { params: { id: string } }) {
         />
       </Topbar>
       <div className="flex min-h-0 flex-1">
-        <section className="flex min-w-0 flex-1 flex-col px-6 py-5">
+        <section className="flex min-w-0 flex-1 flex-col gap-3 px-6 py-5">
           <FitBoard>
-            <InkCanvas ink={ink} tool={tool} className="hand wb" placeholder="a blank page. write anything, then tap Check" onStroke={() => chk.markStale()}>
+            <InkCanvas ink={ink} tool={tool} color={color} size={size} className="hand wb" placeholder="a blank page. write anything, then tap Check" onStroke={() => chk.markStale()}>
               <OverlayLayer
                 result={chk.result}
                 resultKey={chk.key}
@@ -71,11 +73,9 @@ export default function BoardPage({ params }: { params: { id: string } }) {
                 onMarkTap={() => store.helpLevel === 0 && setLevel(1)}
                 onCheckAgain={() => chk.check(ink.strokes)}
               />
-              <div className="absolute bottom-3 left-3 z-10">
-                <Toolbar ink={ink} tool={tool} setTool={setTool} />
-              </div>
             </InkCanvas>
           </FitBoard>
+          <Toolbar ink={ink} tool={tool} setTool={setTool} color={color} setColor={setColor} size={size} setSize={setSize} />
         </section>
         <aside className="flex w-[170px] shrink-0 flex-col gap-5 border-l-[1.5px] border-dashed border-rule px-4 py-5">
           <Button variant="red" className="wa w-full !min-h-[64px] !text-[1.5rem]" disabledReason={chk.thinking ? "the red pen is still reading" : ink.strokes.length ? null : "write something first"} onClick={() => chk.check(ink.strokes)}>

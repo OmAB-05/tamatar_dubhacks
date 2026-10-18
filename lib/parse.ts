@@ -113,8 +113,40 @@ export function bboxFromPixels(
 
 const invalid = (msg: string) => new AppError("invalid_model_response", msg, true);
 
-function wordCount(s: string): number {
-  return s.trim().split(/\s+/).filter(Boolean).length;
+export const MAX_MARK_WORDS = 6;
+
+// A token counts as a word if it has a letter or digit, so standalone operators don't:
+// "10 × 9.8 × 0.866 = 84.9" is four words.
+const isWord = (token: string) => /[\p{L}\p{N}]/u.test(token);
+
+/**
+ * Keep the red-pen mark within MAX_MARK_WORDS by cutting it, instead of failing the
+ * whole check: the synthetic eval lost 6 of 25 Sonnet answers on wrong work to an
+ * over-long mark, and the retry rarely fixed it.
+ */
+export function shortenMark(mark: string): string {
+  const tokens = mark.trim().split(/\s+/).filter(Boolean);
+  let words = 0;
+  let end = tokens.length;
+  for (let i = 0; i < tokens.length; i++) {
+    if (isWord(tokens[i]) && ++words > MAX_MARK_WORDS) {
+      end = i;
+      break;
+    }
+  }
+  if (end === tokens.length) return tokens.join(" ");
+  let kept = tokens.slice(0, end);
+  // Prefer ending at the last clause break ("Use N, not mg, …" → "Use N"), as long
+  // as at least two words remain, over stopping mid-phrase.
+  for (let i = kept.length - 2; i >= 1; i--) {
+    if (/[,;:]$/.test(kept[i]) || /^[—–]$/.test(kept[i + 1])) {
+      kept = kept.slice(0, i + 1);
+      break;
+    }
+  }
+  // Don't leave a dangling operator or connective punctuation at the cut.
+  while (kept.length > 1 && !isWord(kept[kept.length - 1])) kept.pop();
+  return kept.join(" ").replace(/[,;:]+$/, "");
 }
 
 /**
@@ -147,13 +179,12 @@ export function validateCheck(m: ModelCheck): CheckResponse {
     throw invalid("Incorrect work is missing one or more feedback fields");
   }
   if (!bbox) throw invalid("Incorrect work is missing a valid bbox");
-  if (wordCount(mark) > 6) throw invalid("mark is longer than 6 words");
 
   return {
     correct: false,
     errorStep: normalizeForFont(errorStep),
     bbox,
-    mark: normalizeForFont(mark),
+    mark: normalizeForFont(shortenMark(mark)),
     hint: normalizeForFont(hint),
     explanation: normalizeForFont(explanation),
     fullSolution: normalizeForFont(fullSolution),

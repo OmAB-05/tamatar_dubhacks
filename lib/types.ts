@@ -2,7 +2,16 @@
 
 // ---------- Ink ----------
 export type Point = [x: number, y: number, pressure: number];
-export type Stroke = { id: string; points: Point[]; tool: "pen" | "eraser" };
+export type DrawingTool = "pen" | "pencil" | "ruler" | "eraser";
+// Optional style fields keep existing saved boards compatible (black, size-7 pen).
+export type Stroke = {
+  id: string;
+  points: Point[];
+  tool: DrawingTool;
+  color?: string;
+  size?: number;
+  simulatePressure?: boolean;
+};
 
 // ---------- Problems ----------
 export type ProblemPart = "fbd" | "equations";

@@ -147,7 +147,7 @@ def main() -> None:
             src = g if isinstance(g, str) else g.source
             sources[src] = sources.get(src, 0) + 1
 
-        first = None if mut is None else mut.line
+        first = None if mut is None else mut.first_error
         tb = None if mut is None else token_box(laid[first - 1][0], laid[first - 1][1], mut.token, writer.pen)
         label = {
             "id": case_id,

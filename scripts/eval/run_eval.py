@@ -53,7 +53,7 @@ FIELDS = [
     "caseId", "problemId", "mutation", "model", "serverModel", "promptVersion",
     "httpStatus", "errorCode", "truthCorrect", "predCorrect", "classificationCorrect",
     "falseAccusation", "missedError", "truthErrorKey", "predErrorKey", "errorKeyMatch",
-    "bboxIoU", "tokenBboxIoU", "latencyMs", "requestId", "mark", "observed",
+    "bboxIoU", "tokenBboxIoU", "predBbox", "trueBbox", "latencyMs", "requestId", "mark", "observed",
 ]
 
 
@@ -87,6 +87,10 @@ def post(url: str, payload: dict, timeout: float, debug: bool) -> tuple[int, dic
     except json.JSONDecodeError:
         parsed = {"error": {"code": "non_json_response", "message": body[:200].decode(errors="replace")}}
     return status, parsed, {k.lower(): v for k, v in hdrs.items()}, latency
+
+
+def box_str(b: dict | None) -> str | None:
+    return None if not b else " ".join(f"{b[k]:.4f}" for k in ("x", "y", "w", "h"))
 
 
 def fmt(v) -> str:
@@ -173,6 +177,9 @@ def main() -> None:
                 "bboxIoU": None if truth or pred is not False else iou(body.get("bbox"), label["bbox"]) or 0.0,
                 "tokenBboxIoU": None if truth or pred is not False or not label["tokenBbox"]
                 else iou(body.get("bbox"), label["tokenBbox"]) or 0.0,
+                # Boxes as x,y,w,h fractions, for per-model calibration (dataset_strategy.md method 4).
+                "predBbox": box_str(body.get("bbox") if ok else None),
+                "trueBbox": box_str(label["bbox"]),
                 "latencyMs": round(latency),
                 "requestId": hdrs.get("x-request-id"),
                 "mark": body.get("mark") if ok else None,

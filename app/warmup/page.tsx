@@ -66,6 +66,8 @@ export default function Warmup() {
   const store = useStore();
   const ink = useInk();
   const [tool, setTool] = useState<Tool>("pen");
+  const [color, setColor] = useState("#1f1a17");
+  const [size, setSize] = useState(7);
   const [loop, setLoop] = useState<LoopBox | null>(null);
   const [thinking, setThinking] = useState(false);
   const [result, setResult] = useState<CheckResponse | null>(null);
@@ -116,6 +118,8 @@ export default function Warmup() {
           <InkCanvas
             ink={ink}
             tool={tool}
+            color={color}
+            size={size}
             className="overflow-visible rounded-xl"
             placeholder="your turn. write it out here, then circle your answer"
             onStroke={() => result && setStale(true)}
@@ -142,10 +146,10 @@ export default function Warmup() {
                 Check this?
               </button>
             )}
-            <div className="absolute bottom-3 left-3 z-10">
-              <Toolbar ink={ink} tool={tool} setTool={setTool} />
-            </div>
           </InkCanvas>
+          <div className="mt-3">
+            <Toolbar ink={ink} tool={tool} setTool={setTool} color={color} setColor={setColor} size={size} setSize={setSize} />
+          </div>
           <div className="mt-4 flex justify-end">
             {result?.correct ? (
               <Button variant="red" className="wa !px-7 !text-[1.3rem] bubble" onClick={() => router.push("/home")}>

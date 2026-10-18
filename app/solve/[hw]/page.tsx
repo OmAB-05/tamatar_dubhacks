@@ -40,6 +40,8 @@ export default function Solve({ params }: { params: { hw: string } }) {
   const problem = hw.problems[index];
   const [part, setPart] = useState<ProblemPart>("fbd");
   const [tool, setTool] = useState<Tool>("pen");
+  const [color, setColor] = useState("#1f1a17");
+  const [size, setSize] = useState(7);
   const [panelOpen, setPanelOpen] = useState(true);
   const [turning, setTurning] = useState(0);
   const [peek, setPeek] = useState(false);
@@ -149,22 +151,16 @@ export default function Solve({ params }: { params: { hw: string } }) {
   const checkReason = chk.thinking ? "the red pen is still reading" : !ink.strokes.length ? (part === "fbd" ? "draw the forces first" : "write your answer first") : null;
   const nextReason = prog.equations ? null : !prog.fbd ? "get the diagram right first" : "finish the equations first";
 
-  // Keyboard: P pen · E eraser · ⌘Z / ⇧⌘Z · Enter check · 1–4 help · → next
+  // Drawing shortcuts live in Toolbar. Keep page actions away from calculator inputs.
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if ((e.target as Element).closest("input,textarea")) return;
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
-        e.preventDefault();
-        return e.shiftKey ? ink.redo() : ink.undo();
-      }
+      if ((e.target as Element).closest("input,textarea,select,button,[contenteditable=true],[role=dialog]")) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
         return saveNow();
       }
       if (e.metaKey || e.ctrlKey) return;
-      if (e.key === "p") setTool("pen");
-      else if (e.key === "e") setTool("eraser");
-      else if (e.key === "Enter" && !checkReason) runCheck();
+      if (e.key === "Enter" && !checkReason) runCheck();
       else if (["1", "2", "3", "4"].includes(e.key)) setLevel((Number(e.key) - 1) as HelpLevel);
       else if (e.key === "ArrowRight" && !nextReason) next();
     };
@@ -216,6 +212,8 @@ export default function Solve({ params }: { params: { hw: string } }) {
               <InkCanvas
                 ink={ink}
                 tool={tool}
+                color={color}
+                size={size}
                 placeholder={PLACEHOLDER[part]}
                 className="hand wb overflow-visible"
                 background={part === "fbd" ? <g dangerouslySetInnerHTML={{ __html: ramp }} /> : undefined}
@@ -264,9 +262,6 @@ export default function Solve({ params }: { params: { hw: string } }) {
                     <StrokeThumb strokes={fbdInk.strokes} underlay={ramp} className="h-full w-full" />
                   </button>
                 )}
-                <div className="absolute bottom-3 left-3 z-10">
-                  <Toolbar ink={ink} tool={tool} setTool={setTool} />
-                </div>
                 {/* the tomato peeks in from the corner during feedback */}
                 <div
                   className="absolute -bottom-5 -right-5 z-10 transition-transform duration-500"
@@ -277,6 +272,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
               </InkCanvas>
             </div>
           </FitBoard>
+          <Toolbar ink={ink} tool={tool} setTool={setTool} color={color} setColor={setColor} size={size} setSize={setSize} />
         </section>
 
         {/* rail */}
