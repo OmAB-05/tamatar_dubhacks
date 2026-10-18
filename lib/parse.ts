@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AppError } from "@/lib/errors";
 import { normalizeForFont } from "@/lib/font";
-import type { BBox, CheckResponse, ExtractResponse, Problem } from "@/lib/types";
+import type { BBox, CheckResponse, ExtractResponse, FigureBox, Problem } from "@/lib/types";
 
 // ---------- Requests ----------
 
@@ -29,6 +29,9 @@ export const ERROR_KEYS = [
   "missing_applied_force",
   "applied_force_direction",
   "extra_force",
+  "missing_tension",
+  "tension_direction",
+  "centrifugal_force",
   // Part B — equations
   "sin_cos_swap",
   "normal_force_equals_mg",
@@ -41,6 +44,12 @@ export const ERROR_KEYS = [
   "arithmetic_error",
   "unit_error",
   "final_answer_wrong",
+  "wrong_formula",
+  "vector_component_error",
+  "energy_conservation_misapplied",
+  "momentum_conservation_misapplied",
+  "torque_error",
+  "kinematics_sign_or_axis",
   "other",
 ] as const;
 export type ErrorKey = (typeof ERROR_KEYS)[number];
@@ -200,8 +209,25 @@ export const ExtractModelSchema = z.object({
   problems: z.array(
     z.object({
       title: z.string(),
+      topic: z.string().describe("Short topic, e.g. 'Kinematics', 'Newton's laws', 'Energy'."),
       text: z.string().describe("The problem statement, copied faithfully."),
+      kind: z.enum(["inclined_plane", "general"]).describe("inclined_plane only for a single block on a ramp."),
+      needsFreeBodyDiagram: z
+        .boolean()
+        .describe("true when drawing a free-body diagram is a natural first step (forces on an object)."),
       givenValues: z.array(z.object({ name: z.string(), value: z.string() })),
+      figures: z
+        .array(
+          z.object({
+            page: z.number().describe("1-based page (or 1 for a single image) where the figure appears."),
+            x0: z.number().describe("Left edge as a fraction 0-1 of the page width."),
+            y0: z.number().describe("Top edge as a fraction 0-1 of the page height."),
+            x1: z.number().describe("Right edge as a fraction 0-1 of the page width."),
+            y1: z.number().describe("Bottom edge as a fraction 0-1 of the page height."),
+            caption: z.string().describe("What the figure shows, in a few words."),
+          }),
+        )
+        .describe("Every diagram, graph, table or picture that belongs to this problem. Empty if none."),
       reference: z.object({
         fbd: z.string(),
         equations: z.string(),
@@ -211,29 +237,45 @@ export const ExtractModelSchema = z.object({
   ),
   unsupported: z
     .array(z.string())
-    .describe("One short label per problem in the PDF that is not a single-block inclined-plane problem."),
+    .describe("One short label per item in the upload that is not a gradable physics problem."),
 });
 export type ExtractModelOutput = z.infer<typeof ExtractModelSchema>;
 
-export const MAX_EXTRACTED_PROBLEMS = 10;
+export const MAX_EXTRACTED_PROBLEMS = 12;
+
+const frac = (n: number) => Math.min(1, Math.max(0, Number.isFinite(n) ? n : 0));
 
 export function toExtractResponse(raw: ExtractModelOutput): ExtractResponse {
-  const problems: Problem[] = raw.problems
-    .filter((p) => p.text.trim() && p.reference.finalAnswer.trim())
-    .slice(0, MAX_EXTRACTED_PROBLEMS)
-    .map((p) => ({
-      id: `import-${crypto.randomUUID()}`,
-      title: normalizeForFont(p.title),
-      text: normalizeForFont(p.text),
-      givenValues: Object.fromEntries(
-        p.givenValues.map((g) => [normalizeForFont(g.name), normalizeForFont(g.value)]),
-      ),
-      type: "inclined_plane",
-      reference: {
-        fbd: normalizeForFont(p.reference.fbd),
-        equations: normalizeForFont(p.reference.equations),
-        finalAnswer: normalizeForFont(p.reference.finalAnswer),
-      },
-    }));
-  return { problems, unsupported: raw.unsupported.map(normalizeForFont) };
+  const kept = raw.problems.filter((p) => p.text.trim() && p.reference.finalAnswer.trim()).slice(0, MAX_EXTRACTED_PROBLEMS);
+  const problems: Problem[] = kept.map((p) => ({
+    id: `import-${crypto.randomUUID()}`,
+    title: normalizeForFont(p.title),
+    topic: normalizeForFont(p.topic),
+    text: normalizeForFont(p.text),
+    givenValues: Object.fromEntries(
+      p.givenValues.map((g) => [normalizeForFont(g.name), normalizeForFont(g.value)]),
+    ),
+    type: p.kind,
+    parts: p.kind === "inclined_plane" || p.needsFreeBodyDiagram ? ["fbd", "equations"] : ["equations"],
+    reference: {
+      fbd: normalizeForFont(p.reference.fbd),
+      equations: normalizeForFont(p.reference.equations),
+      finalAnswer: normalizeForFont(p.reference.finalAnswer),
+    },
+  }));
+  const figures: FigureBox[] = kept.flatMap((p, problemIndex) =>
+    p.figures
+      .map((f) => ({
+        problemIndex,
+        page: Math.max(1, Math.round(f.page)),
+        x0: frac(Math.min(f.x0, f.x1)),
+        y0: frac(Math.min(f.y0, f.y1)),
+        x1: frac(Math.max(f.x0, f.x1)),
+        y1: frac(Math.max(f.y0, f.y1)),
+        caption: normalizeForFont(f.caption),
+      }))
+      .filter((f) => f.x1 - f.x0 > 0.02 && f.y1 - f.y0 > 0.02)
+      .slice(0, 4),
+  );
+  return { problems, unsupported: raw.unsupported.map(normalizeForFont), figures };
 }

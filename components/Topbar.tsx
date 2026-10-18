@@ -44,7 +44,7 @@ const NAV = [
 
 /** Wordmark · nav · streak · Challenge · New + menu (§4.4). `floating` = transparent, for the landing hero. */
 export default function Topbar({ children, floating = false }: { children?: React.ReactNode; floating?: boolean }) {
-  const { streak, saveBoard } = useStore();
+  const { streak, saveBoard, account, signOut, toast } = useStore();
   const router = useRouter();
   const path = usePathname();
   const [menu, setMenu] = useState(false);
@@ -102,8 +102,9 @@ export default function Topbar({ children, floating = false }: { children?: Reac
         </Button>
         {menu && (
           <div className="menu hand wa absolute right-0 top-[calc(100%+8px)] flex w-60 flex-col bg-white p-2 shadow-[4px_5px_0_#f6d9d5]">
+            {account && <div className="truncate px-3 pb-1 pt-1 text-[0.75rem] text-muted" title={account.email}>signed in as {account.email}</div>}
             {[
-              { label: "Import problems", act: () => setImportOpen(true) },
+              { label: "Upload worksheet", act: () => setImportOpen(true) },
               {
                 label: "Blank whiteboard",
                 act: () => {
@@ -112,6 +113,14 @@ export default function Topbar({ children, floating = false }: { children?: Reac
                   router.push(`/board/${id}`);
                 },
               },
+              ...(account
+                ? [{
+                    label: "Log out",
+                    act: () => {
+                      signOut().then(() => router.push("/login"), () => toast("could not log out. try again?"));
+                    },
+                  }]
+                : []),
             ].map((it, i) => (
               <button
                 key={it.label}

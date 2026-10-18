@@ -134,7 +134,11 @@ export class ClaudeExtractor implements Extractor {
     private readonly effort: Effort,
   ) {}
 
-  async extract({ pdfBase64, signal }: ExtractInput) {
+  async extract({ base64, mediaType, signal }: ExtractInput) {
+    const upload =
+      mediaType === "application/pdf"
+        ? ({ type: "document", source: { type: "base64", media_type: mediaType, data: base64 } } as const)
+        : ({ type: "image", source: { type: "base64", media_type: mediaType, data: base64 } } as const);
     try {
       const response = await getClient().beta.messages.parse(
         {
@@ -147,8 +151,14 @@ export class ClaudeExtractor implements Extractor {
             {
               role: "user",
               content: [
-                { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
-                { type: "text", text: "Extract the supported problems from this PDF." },
+                upload,
+                {
+                  type: "text",
+                  text:
+                    mediaType === "application/pdf"
+                      ? "Extract the problems from this worksheet PDF, with the page and box of every figure."
+                      : "Extract the problems from this worksheet photo. It is a single page (page 1); give every figure's box as fractions of the image.",
+                },
               ],
             },
           ],

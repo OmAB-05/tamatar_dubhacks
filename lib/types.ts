@@ -16,14 +16,27 @@ export type Stroke = {
 // ---------- Problems ----------
 export type ProblemPart = "fbd" | "equations";
 
+/** "inclined_plane" problems get the ramp drawn on the diagram board; "general" ones use diagramSvg. */
+export type ProblemKind = "inclined_plane" | "general";
+
+/** A picture that belongs to the problem statement (e.g. a figure cropped from an uploaded worksheet). */
+export type Figure = {
+  src: string; // data: URL, https URL, or "sb:<path>" in the worksheet-figures storage bucket
+  alt?: string;
+};
+
 export type Problem = {
   id: string;
   title: string; // "Block on a frictionless ramp"
   text: string; // full problem statement
   givenValues: Record<string, string>; // { m: "5 kg", θ: "30°" }
   checkToken?: string; // Server-signed reference for imported homework.
-  diagramSvg?: string; // optional inline SVG of the setup
-  type: "inclined_plane";
+  diagramSvg?: string; // optional inline SVG of the setup, in board units (1000×640), drawn under the diagram
+  type: ProblemKind;
+  topic?: string; // "Kinematics"
+  parts?: ProblemPart[]; // default ["fbd", "equations"]; ["equations"] for problems with no diagram step
+  boardHint?: string; // faint prompt on the empty diagram board
+  figures?: Figure[];
   reference: {
     fbd: string; // expected forces + directions, plain text
     equations: string; // expected step-by-step solution
@@ -56,7 +69,9 @@ export type CheckResponse = {
 };
 
 // ---------- Extract ----------
-export type ExtractResponse = { problems: Problem[]; unsupported: string[] };
+/** Where an extracted problem's figure sits in the upload: 1-based page, corners as fractions of the page. */
+export type FigureBox = { problemIndex: number; page: number; x0: number; y0: number; x1: number; y1: number; caption: string };
+export type ExtractResponse = { problems: Problem[]; unsupported: string[]; figures?: FigureBox[] };
 
 // ---------- Tomato ----------
 export type TomatoState = 0 | 1 | 2 | 3; // fresh | bruised | wilting | rotten

@@ -34,8 +34,13 @@ export async function checkWork(
   }, 65_000);
 }
 
+export const UPLOAD_TYPES = "application/pdf,image/png,image/jpeg";
+
 export async function extractProblems(file: File): Promise<ExtractResponse> {
-  if (file.size > 3_000_000) throw new Error("PDF must be under 3 MB.");
+  if (!UPLOAD_TYPES.split(",").includes(file.type) && !/\.(pdf|png|jpe?g)$/i.test(file.name)) {
+    throw new Error("Upload a PDF, PNG or JPEG worksheet.");
+  }
+  if (file.size > 3_000_000) throw new Error("File must be under 3 MB.");
   const form = new FormData();
   form.set("file", file);
   return request("/api/extract", { method: "POST", body: form }, 65_000);

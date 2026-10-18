@@ -11,12 +11,14 @@ import Topbar from "@/components/Topbar";
 import { useChecker } from "@/components/useChecker";
 import { MOCK } from "@/lib/api";
 import { useStore } from "@/lib/store";
+import { useAccountGate } from "@/lib/useAccountGate";
 import type { HelpLevel } from "@/lib/types";
 import { useInk } from "@/lib/useInk";
 
 /** Blank whiteboard: full canvas, general "find the first slip" check (§4.8). */
 export default function BoardPage({ params }: { params: { id: string } }) {
   const store = useStore();
+  const allowed = useAccountGate();
   const board = store.boards.find((b) => b.id === params.id);
   const ink = useInk(board?.strokes ?? []);
   const [tool, setTool] = useState<Tool>("pen");
@@ -47,6 +49,8 @@ export default function BoardPage({ params }: { params: { id: string } }) {
     store.setHelpLevel(l);
     chk.countReveal(l, !!chk.result && !chk.result.correct);
   };
+
+  if (!allowed) return null;
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">

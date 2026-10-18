@@ -2,14 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { extractProblems } from "@/lib/api";
+import { extractProblems, UPLOAD_TYPES } from "@/lib/api";
+import { cropFigures } from "@/lib/figures";
 import { useStore } from "@/lib/store";
 import type { Problem } from "@/lib/types";
 import Button from "./Button";
+import FigureImage from "./FigureImage";
 import Modal from "./Modal";
 import Tomato from "./Tomato";
 
-/** Import modal: drop zone with live PDF extraction. */
+/** Import modal: drop a worksheet (PDF or photo); problems and their figures become the app's own worksheet. */
 export default function ImportModal({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const store = useStore();
@@ -21,6 +23,7 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
   const [reading, setReading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<Set<number>>(new Set());
+  const [saving, setSaving] = useState(false);
 
   const take = async (f?: File | null) => {
     if (!f) return;
@@ -31,19 +34,41 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
     setUnsupported([]);
     try {
       const result = await extractProblems(f);
-      setProblems(result.problems);
+      // cut each problem's figures out of the upload so the worksheet keeps its pictures
+      let figures = new Map<number, NonNullable<Problem["figures"]>>();
+      try {
+        figures = await cropFigures(f, result.figures ?? []);
+      } catch {
+        setError("Found the problems, but couldn't cut out the figures. You can still create the worksheet.");
+      }
+      setProblems(result.problems.map((p, i) => (figures.has(i) ? { ...p, figures: figures.get(i) } : p)));
       setUnsupported(result.unsupported);
       setPicked(new Set(result.problems.map((_, i) => i)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not read this PDF. Please try again.");
+      setError(err instanceof Error ? err.message : "Could not read this worksheet. Please try again.");
     } finally {
       setReading(false);
     }
   };
 
+  const create = async () => {
+    if (!file) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const id = `hw-${crypto.randomUUID()}`;
+      await store.addHomework({ id, title: file.replace(/\.(pdf|png|jpe?g)$/i, ""), course: "Your worksheet", due: "ready to solve", problems: problems.filter((_, i) => picked.has(i)) });
+      onClose();
+      router.push(`/solve/${id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save the worksheet. Please try again.");
+      setSaving(false);
+    }
+  };
+
   return (
     <Modal onClose={onClose}>
-      <h2 className="mb-4 text-[1.6rem]">Import problems</h2>
+      <h2 className="mb-4 text-[1.6rem]">Upload a worksheet</h2>
       {!file ? (
         <div
           className={`relative flex flex-col items-center justify-center gap-3 rounded-2xl p-10 text-center transition-colors ${over ? "bg-blush" : ""}`}
@@ -73,16 +98,17 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
               <Tomato size={56} interactive={false} listen={false} />
             </div>
           )}
-          <div className="text-[1.15rem]">drop your homework PDF here</div>
+          <div className="text-[1.15rem]">drop your worksheet here</div>
+          <div className="text-[0.85rem] text-muted">PDF (up to 10 pages) or a photo · under 3 MB</div>
           <Button onClick={() => input.current?.click()}>choose a file</Button>
-          <input ref={input} type="file" accept="application/pdf" hidden onChange={(e) => take(e.target.files?.[0])} />
+          <input ref={input} type="file" accept={UPLOAD_TYPES} hidden onChange={(e) => take(e.target.files?.[0])} />
         </div>
       ) : (
         <div>
           <div className="mb-3 text-[0.85rem] text-muted">{file}</div>
-          <div className="mb-2 text-[1.1rem]">{reading ? "reading your PDF…" : `Found ${problems.length} supported problem${problems.length === 1 ? "" : "s"}`}</div>
+          <div className="mb-2 text-[1.1rem]">{reading ? "reading your worksheet and cutting out figures…" : `Found ${problems.length} problem${problems.length === 1 ? "" : "s"}`}</div>
           {error && <p role="alert" className="mb-3 text-tomato">{error}</p>}
-          <ul className="flex flex-col gap-2">
+          <ul className="flex max-h-[55dvh] flex-col gap-2 overflow-y-auto pr-1">
             {problems.map((p, i) => (
               <li key={p.id} className="bubble">
                 <label className="flex cursor-pointer items-start gap-3 text-[0.85rem]">
@@ -98,9 +124,17 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                     })}
                     className="mt-1 h-5 w-5 shrink-0 accent-[var(--tomato)]"
                   />
-                  <span>
+                  <span className="min-w-0">
                     <span className="text-ink">{p.title}</span>
+                    {p.topic && <span className="text-faint"> · {p.topic}</span>}
                     <span className="block text-muted">{p.text}</span>
+                    {!!p.figures?.length && (
+                      <span className="mt-2 flex flex-wrap gap-2">
+                        {p.figures.map((f) => (
+                          <FigureImage key={f.src} figure={f} className="hand wa h-[5rem] max-w-[10rem] bg-white p-1" />
+                        ))}
+                      </span>
+                    )}
                   </span>
                 </label>
               </li>
@@ -112,20 +146,15 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
               ))}
           </ul>
           <div className="mt-5 flex justify-between">
-            <button type="button" className="link text-[0.9rem] text-muted" disabled={reading} onClick={() => { setFile(null); setError(null); }}>
+            <button type="button" className="link text-[0.9rem] text-muted" disabled={reading || saving} onClick={() => { setFile(null); setError(null); }}>
               choose another file
             </button>
             <Button
               variant="red"
-              disabledReason={reading ? "still reading the PDF" : !problems.length || picked.size === 0 ? "pick at least one problem" : null}
-              onClick={() => {
-                const id = `hw-${crypto.randomUUID()}`;
-                store.addHomework({ id, title: file.replace(/\.pdf$/i, ""), course: "Imported homework", due: "ready to solve", problems: problems.filter((_, i) => picked.has(i)) });
-                onClose();
-                router.push(`/solve/${id}`);
-              }}
+              disabledReason={reading ? "still reading the worksheet" : saving ? "saving your worksheet…" : !problems.length || picked.size === 0 ? "pick at least one problem" : null}
+              onClick={create}
             >
-              Create homework
+              {saving ? "Saving…" : "Create worksheet"}
             </Button>
           </div>
         </div>

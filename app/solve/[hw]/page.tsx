@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FitBoard from "@/components/Board";
 import Button from "@/components/Button";
+import FigureImage from "@/components/FigureImage";
 import FontSizer from "@/components/FontSizer";
 import HelpLevelBar from "@/components/HelpLevelBar";
 import InkCanvas, { type LoopBox, type Tool } from "@/components/InkCanvas";
@@ -11,6 +12,7 @@ import Modal from "@/components/Modal";
 import OverlayLayer from "@/components/OverlayLayer";
 import PartTabs from "@/components/PartTabs";
 import ProblemPanel, { Dots } from "@/components/ProblemPanel";
+import ProgressBar from "@/components/ProgressBar";
 import RampDiagram from "@/components/RampDiagram";
 import StrokeThumb from "@/components/StrokeThumb";
 import Tally from "@/components/Tally";
@@ -20,11 +22,13 @@ import Topbar from "@/components/Topbar";
 import { useChecker } from "@/components/useChecker";
 import { MOCK } from "@/lib/api";
 import { BOARD_H, BOARD_W } from "@/lib/ink";
-import { exportHomeworkPdf } from "@/lib/pdf";
-import { rampPoints, rampSvg } from "@/lib/ramp";
+import { exportHomeworkPdf, underlayFor } from "@/lib/pdf";
+import { isDone, partsOf, worksheetProgress, type PartProgress } from "@/lib/progress";
+import { rampPoints } from "@/lib/ramp";
 import { load, save } from "@/lib/storage";
 import { useStore } from "@/lib/store";
-import type { HelpLevel, ProblemPart } from "@/lib/types";
+import type { Figure, HelpLevel, Problem, ProblemPart } from "@/lib/types";
+import { useAccountGate } from "@/lib/useAccountGate";
 import { useInk } from "@/lib/useInk";
 
 const EMPTY_PROGRESS = { fbd: false, equations: false };
@@ -41,14 +45,14 @@ function useScale(key: string) {
   return [v, (n: number) => { setV(n); save(key, n); }] as const;
 }
 
-const PLACEHOLDER: Record<ProblemPart, string> = {
-  fbd: "",
-  equations: "write your equations here",
-};
+/** Open a problem on its diagram until that part is done, then on the solution. */
+const startPart = (p: Problem, pr: PartProgress | undefined): ProblemPart =>
+  partsOf(p).includes("fbd") && !pr?.fbd ? "fbd" : "equations";
 
 export default function Solve({ params }: { params: { hw: string } }) {
   const router = useRouter();
   const store = useStore();
+  const allowed = useAccountGate();
   const hw = store.homework.find((h) => h.id === params.hw && h.due) ?? store.homework[0];
   const [index, setIndex] = useState(0);
   const problem = hw.problems[index];
@@ -67,35 +71,40 @@ export default function Solve({ params }: { params: { hw: string } }) {
   // hint / explanation / answer render in the side panel, not on the board
   const [helpSlot, setHelpSlot] = useState<HTMLElement | null>(null);
   const [questionFont, setQuestionFont] = useScale("questionFont");
+  const [zoom, setZoom] = useState<Figure | null>(null);
 
   const angle = parseInt(problem.givenValues["θ"] ?? "30") || 30;
-  const ramp = useMemo(() => rampSvg(angle), [angle]);
+  const isRamp = problem.type === "inclined_plane";
+  const withDiagram = partsOf(problem).includes("fbd");
+  // what's printed on the diagram board: the ramp, the problem's own setup drawing, or nothing
+  const underlay = useMemo(() => underlayFor(problem), [problem]);
 
   const level = store.helpLevel;
   const fbdInk = useInk();
   const eqInk = useInk();
   const ink = part === "fbd" ? fbdInk : eqInk;
-  const fbdCheck = useChecker({ problem, part: "fbd", level, underlay: ramp });
+  const fbdCheck = useChecker({ problem, part: "fbd", level, underlay });
   const eqCheck = useChecker({ problem, part: "equations", level });
   const chk = part === "fbd" ? fbdCheck : eqCheck;
 
   const prog = store.progress[problem.id] ?? EMPTY_PROGRESS;
-  const doneCount = hw.problems.filter((p) => store.progress[p.id]?.fbd && store.progress[p.id]?.equations).length;
+  const { done: doneCount, fraction } = worksheetProgress(hw, store.progress);
   const allDone = doneCount === hw.problems.length;
+  const problemDone = isDone(problem, prog);
 
   // Open on the first unfinished problem with its saved ink, once saved data has loaded.
   const opened = useRef(false);
   useEffect(() => {
-    if (!store.ready || opened.current) return;
+    if (!store.ready || !store.authReady || opened.current) return;
     opened.current = true;
-    const first = Math.max(0, hw.problems.findIndex((p) => !(store.progress[p.id]?.fbd && store.progress[p.id]?.equations)));
+    const first = Math.max(0, hw.problems.findIndex((p) => !isDone(p, store.progress[p.id])));
     const p = hw.problems[first];
     const a = store.answers[p.id];
     fbdInk.reset(a?.fbd ?? []);
     eqInk.reset(a?.equations ?? []);
-    setPart(store.progress[p.id]?.fbd ? "equations" : "fbd");
+    setPart(startPart(p, store.progress[p.id]));
     setIndex(first);
-  }, [store.ready, store.progress, store.answers, hw.problems, fbdInk, eqInk]);
+  }, [store.ready, store.authReady, store.progress, store.answers, hw.problems, fbdInk, eqInk]);
 
   // Autosave the current problem's ink so a break (or a reload) never loses work.
   const { saveAnswer } = store;
@@ -121,7 +130,8 @@ export default function Solve({ params }: { params: { hw: string } }) {
       fbdCheck.reset();
       eqCheck.reset();
       setLoop(null);
-      setPart(store.progress[next.id]?.fbd ? "equations" : "fbd");
+      setZoom(null);
+      setPart(startPart(next, store.progress[next.id]));
       setIndex(i);
     },
     [index, problem.id, fbdInk, eqInk, hw.problems, fbdCheck, eqCheck, store.progress, store.answers, saveAnswer],
@@ -154,7 +164,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
     setExporting(true);
     try {
       const answers = { ...store.answers, [problem.id]: { fbd: fbdInk.strokes, equations: eqInk.strokes } };
-      await exportHomeworkPdf(hw, answers, store.name);
+      await exportHomeworkPdf(hw, answers, store.name, store.progress);
       store.toast("PDF saved. upload it to Canvas");
     } catch {
       store.toast("could not make the PDF. try again?");
@@ -169,7 +179,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
   };
 
   const checkReason = chk.thinking ? "the red pen is still reading" : !ink.strokes.length ? (part === "fbd" ? "draw the forces first" : "write your answer first") : null;
-  const nextReason = prog.equations ? null : !prog.fbd ? "get the diagram right first" : "finish the equations first";
+  const nextReason = problemDone ? null : withDiagram && !prog.fbd ? "get the diagram right first" : withDiagram ? "finish the equations first" : "finish the solution first";
 
   // Drawing shortcuts live in Toolbar. Keep page actions away from calculator inputs.
   useEffect(() => {
@@ -197,23 +207,24 @@ export default function Solve({ params }: { params: { hw: string } }) {
 
   // Everything already on the board, so the red-pen note lands in empty space.
   const obstacles = useMemo(() => {
-    const pts: [number, number][] = part === "fbd" ? rampPoints(angle) : [...THUMB_PTS];
+    const pts: [number, number][] = part === "fbd" ? (isRamp ? rampPoints(angle) : []) : withDiagram ? [...THUMB_PTS] : [];
     for (const st of ink.strokes) for (let i = 0; i < st.points.length; i += 2) pts.push([st.points[i][0], st.points[i][1]]);
     return pts;
-  }, [part, angle, ink.strokes]);
+  }, [part, angle, isRamp, withDiagram, ink.strokes]);
 
   const ringBox = chk.result?.bbox;
   const feedback = chk.thinking || !!chk.result;
 
-  if (!store.ready) return null;
+  if (!allowed) return null;
 
   return (
     // fixed to the viewport: the page never scrolls or bounces under the Pencil
     <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none">
       <Topbar>
-        <div className="hidden items-center gap-3 text-[0.9rem] text-muted xl:flex">
-          <span className="whitespace-nowrap">{hw.title}</span>
-          <Dots total={hw.problems.length} done={doneCount} current={index} />
+        <div className="hidden items-center gap-3 text-[0.9rem] text-muted lg:flex">
+          <span className="max-w-[14rem] truncate whitespace-nowrap">{hw.title}</span>
+          <ProgressBar fraction={fraction} label={`${hw.title} progress`} className="w-[9rem]" />
+          <span className="hidden 2xl:inline-flex"><Dots total={hw.problems.length} done={doneCount} current={index} /></span>
         </div>
       </Topbar>
 
@@ -235,18 +246,42 @@ export default function Solve({ params }: { params: { hw: string } }) {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3">
                 <div className="text-[1.15rem] text-tomato">Problem {index + 1}</div>
+                {problem.topic && <div className="text-[0.8rem] text-muted">{problem.topic}</div>}
                 <FontSizer value={questionFont} onChange={setQuestionFont} label="question text" />
               </div>
               <p className="mt-1 leading-snug text-ink-2" style={{ fontSize: `${questionFont}rem` }}>
                 {problem.text}
               </p>
             </div>
-            <button type="button" aria-label="show the ramp on the diagram board" onClick={() => setPart("fbd")} className="shrink-0 rounded-xl p-1 transition-colors hover:bg-blush">
-              <RampDiagram angle={angle} width={120} />
-            </button>
+            {problem.figures?.map((f, i) => (
+              <button
+                key={f.src}
+                type="button"
+                aria-label={`enlarge figure ${i + 1}`}
+                onClick={() => setZoom(f)}
+                className="hand wa shrink-0 overflow-hidden bg-white p-1 transition-transform hover:-rotate-1"
+              >
+                <FigureImage figure={f} className="h-[6.5rem] w-[9rem]" />
+              </button>
+            ))}
+            {isRamp ? (
+              <button type="button" aria-label="show the ramp on the diagram board" onClick={() => setPart("fbd")} className="shrink-0 rounded-xl p-1 transition-colors hover:bg-blush">
+                <RampDiagram angle={angle} width={120} />
+              </button>
+            ) : (
+              problem.diagramSvg && (
+                <button type="button" aria-label="show the setup on the diagram board" onClick={() => setPart("fbd")} className="shrink-0 rounded-xl p-1 transition-colors hover:bg-blush">
+                  <svg viewBox={`0 0 ${BOARD_W} ${BOARD_H}`} width={130} aria-hidden dangerouslySetInnerHTML={{ __html: problem.diagramSvg }} />
+                </button>
+              )
+            )}
           </div>
 
-          <PartTabs part={part} locked={!prog.fbd} onChange={(p) => { setPart(p); setLoop(null); }} />
+          {withDiagram ? (
+            <PartTabs part={part} locked={!prog.fbd} onChange={(p) => { setPart(p); setLoop(null); }} />
+          ) : (
+            <div className="text-[1.05rem] text-ink-2">your solution <span className="text-[0.85rem] text-muted">· write it out below, then press Check</span></div>
+          )}
 
           <FitBoard>
             <div key={part} className="board-enter relative">
@@ -255,9 +290,9 @@ export default function Solve({ params }: { params: { hw: string } }) {
                 tool={tool}
                 color={color}
                 size={size}
-                placeholder={PLACEHOLDER[part]}
+                placeholder={part === "fbd" ? "" : withDiagram ? "write your equations here" : "write your solution here"}
                 className="hand wb overflow-visible"
-                background={part === "fbd" ? <g dangerouslySetInnerHTML={{ __html: ramp }} /> : undefined}
+                background={part === "fbd" && underlay ? <g dangerouslySetInnerHTML={{ __html: underlay }} /> : undefined}
                 onStroke={() => chk.markStale()}
                 onCircle={(b) => setLoop(b)}
                 onEraseAt={(x, y) => {
@@ -267,7 +302,9 @@ export default function Solve({ params }: { params: { hw: string } }) {
                 }}
               >
                 {part === "fbd" && !fbdInk.strokes.length && (
-                  <div className="pointer-events-none absolute right-6 top-5 text-[1rem] text-faint">draw the forces on the block as arrows</div>
+                  <div className="pointer-events-none absolute right-6 top-5 text-[1rem] text-faint">
+                    {problem.boardHint ?? (isRamp ? "draw the forces on the block as arrows" : "draw the free-body diagram")}
+                  </div>
                 )}
                 <OverlayLayer
                   result={chk.result}
@@ -294,7 +331,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
                   </button>
                 )}
                 {/* your diagram, pinned bottom-right of the equations board (tap for full size) */}
-                {part === "equations" && (
+                {part === "equations" && withDiagram && (
                   <button
                     type="button"
                     aria-label="peek at your diagram"
@@ -309,7 +346,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
                     }}
                   >
                     <span className="absolute left-2 top-1 text-[0.7rem] text-muted">your diagram</span>
-                    <StrokeThumb strokes={fbdInk.strokes} underlay={ramp} className="h-full w-full" />
+                    <StrokeThumb strokes={fbdInk.strokes} underlay={underlay} className="h-full w-full" />
                   </button>
                 )}
                 {/* the tomato peeks in from the corner during feedback */}
@@ -350,7 +387,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
             >
               Export PDF
             </Button>
-            <Button variant={prog.equations ? "red" : "plain"} className="wc w-full !text-[0.95rem]" disabledReason={nextReason} onClick={next}>
+            <Button variant={problemDone ? "red" : "plain"} className="wc w-full !text-[0.95rem]" disabledReason={nextReason} onClick={next}>
               {index < hw.problems.length - 1 ? "Next question →" : "Finish →"}
             </Button>
           </aside>
@@ -371,11 +408,18 @@ export default function Solve({ params }: { params: { hw: string } }) {
         )}
       </div>
 
+      {zoom && (
+        <Modal onClose={() => setZoom(null)} className="!max-w-[56rem]">
+          <div className="mb-2 text-[1.2rem]">{zoom.alt || "figure"}</div>
+          <FigureImage figure={zoom} className="max-h-[75dvh] w-full" />
+        </Modal>
+      )}
+
       {peek && (
         <Modal onClose={() => setPeek(false)} className="!max-w-[46rem]">
           <div className="mb-2 text-[1.2rem]">your diagram</div>
           <div className="hand wb bg-white">
-            <StrokeThumb strokes={fbdInk.strokes} underlay={ramp} className="h-auto w-full" />
+            <StrokeThumb strokes={fbdInk.strokes} underlay={underlay} className="h-auto w-full" />
           </div>
         </Modal>
       )}

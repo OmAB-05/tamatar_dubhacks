@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useState } from "react";
+import type { Homework } from "@/data/problems";
 import { newId } from "@/lib/ink";
+import { exportHomeworkPdf } from "@/lib/pdf";
+import { worksheetProgress } from "@/lib/progress";
 import { useStore } from "@/lib/store";
+import { useAccountGate } from "@/lib/useAccountGate";
 import { STATUS_LINES } from "@/lib/tomato";
 import type { TomatoState } from "@/lib/types";
-import { Dots } from "@/components/ProblemPanel";
+import Button from "@/components/Button";
+import ProgressBar from "@/components/ProgressBar";
 import StrokeThumb from "@/components/StrokeThumb";
 import Tomato from "@/components/Tomato";
 import Topbar from "@/components/Topbar";
@@ -16,14 +21,69 @@ const SHAPES = ["wa", "wb", "wc"];
 const CARD_TOMATO: Record<string, TomatoState> = { hw4: 0, hw3: 0, hw2: 1 };
 
 export default function Home() {
-  const { ready, name, tomato, progress, boards, saveBoard, toast, homework } = useStore();
+  const store = useStore();
+  const { name, tomato, progress, boards, saveBoard, homework } = store;
   const router = useRouter();
+  const allowed = useAccountGate();
+  const [exporting, setExporting] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (ready && !name) router.replace("/welcome");
-  }, [ready, name, router]);
+  if (!allowed) return null;
 
-  if (!ready || !name) return null;
+  const uploaded = homework.filter((h) => h.id.startsWith("hw-"));
+  const builtIn = homework.filter((h) => !h.id.startsWith("hw-"));
+
+  const exportPdf = async (hw: Homework) => {
+    setExporting(hw.id);
+    try {
+      await exportHomeworkPdf(hw, store.answers, name, progress);
+      store.toast("PDF saved. upload it to Canvas");
+    } catch {
+      store.toast("could not make the PDF. try again?");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const cards = (list: Homework[], offset: number) => (
+    <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+      {list.map((hw, i) => {
+        const { done, total, fraction, started } = worksheetProgress(hw, progress);
+        const finished = done === total;
+        const status = finished ? "all done" : done > 0 ? `${done} of ${total} done` : started ? "in progress" : "not started";
+        const figures = hw.problems.reduce((n, p) => n + (p.figures?.length ?? 0), 0);
+        return (
+          <div key={hw.id} className={`card relative w-full ${SHAPES[(i + offset) % 3]} ${finished ? "" : "cut"}`} style={{ animationDelay: `${(i + offset) * 60}ms` }}>
+            <Link
+              href={`/solve/${hw.id}`}
+              className="block"
+              onPointerDown={(e) => e.currentTarget.parentElement?.classList.add("pressed")}
+              onPointerUp={(e) => e.currentTarget.parentElement?.classList.remove("pressed")}
+              onPointerLeave={(e) => e.currentTarget.parentElement?.classList.remove("pressed")}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[1.3rem] leading-tight">{hw.title}</div>
+                  <div className="mt-1 text-[0.8rem] text-ink-2">
+                    {hw.course} · {total} problem{total === 1 ? "" : "s"}
+                    {figures ? ` · ${figures} figure${figures === 1 ? "" : "s"}` : ""}
+                    {hw.due ? ` · ${hw.due}` : ""}
+                  </div>
+                  <ProgressBar fraction={fraction} label={`${hw.title} progress`} className="mt-3" />
+                  <div className="mt-1 text-[1rem]">{status}</div>
+                </div>
+                <Tomato size={64} state={CARD_TOMATO[hw.id] ?? 0} interactive={false} listen={false} track={false} />
+              </div>
+            </Link>
+            {finished && (
+              <Button variant="red" className="wa mt-3 w-full !min-h-[2.4rem] !text-[0.95rem]" disabledReason={exporting ? "making your PDF…" : null} onClick={() => exportPdf(hw)}>
+                {exporting === hw.id ? "making PDF…" : "Export PDF"}
+              </Button>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="min-h-screen">
@@ -41,46 +101,15 @@ export default function Home() {
           </div>
         </section>
 
-        <h2 className="mb-4 text-[1.4rem]">Your homework</h2>
-        <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-          {homework.map((hw, i) => {
-            const total = hw.problems.length;
-            const done = hw.due ? hw.problems.filter((p) => progress[p.id]?.fbd && progress[p.id]?.equations).length : total;
-            const started = hw.problems.some((p) => progress[p.id]?.fbd);
-            const status = done === total ? "all done" : done > 0 ? `${done} of ${total} done` : started ? "in progress" : "not started";
-            const active = hw.due && done < total;
-            return (
-              <Link
-                key={hw.id}
-                href={`/solve/${hw.id}`}
-                className={`card block w-full ${SHAPES[i % 3]} ${active ? "cut" : ""}`}
-                style={{ animationDelay: `${i * 60}ms` }}
-                onClick={(e) => {
-                  if (hw.due) return;
-                  e.preventDefault();
-                  toast(`${hw.title} is turned in. nice work`);
-                }}
-                onPointerDown={(e) => e.currentTarget.classList.add("pressed")}
-                onPointerUp={(e) => e.currentTarget.classList.remove("pressed")}
-                onPointerLeave={(e) => e.currentTarget.classList.remove("pressed")}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="text-[1.3rem] leading-tight">{hw.title}</div>
-                    <div className="mt-1 text-[0.8rem] text-ink-2">
-                      {hw.course} · {hw.due ?? "turned in"}
-                    </div>
-                    <div className="mt-2">
-                      <Dots total={total} done={done} />
-                    </div>
-                    <div className="mt-1 text-[1rem]">{status}</div>
-                  </div>
-                  <Tomato size={64} state={CARD_TOMATO[hw.id]} interactive={false} listen={false} track={false} />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+        {uploaded.length > 0 && (
+          <>
+            <h2 className="mb-4 text-[1.4rem]">Your worksheets</h2>
+            {cards(uploaded, 0)}
+          </>
+        )}
+
+        <h2 className="mb-4 text-[1.4rem]">Physics 121 homework</h2>
+        {cards(builtIn, uploaded.length)}
 
         <h2 className="mb-4 text-[1.4rem]">Whiteboards</h2>
         <div className="flex flex-wrap gap-6">

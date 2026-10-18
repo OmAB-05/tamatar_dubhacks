@@ -1,7 +1,7 @@
 "use client";
 
 import type { Homework } from "@/data/problems";
-import type { PartProgress } from "@/lib/store";
+import { hasDiagram, isDone, type PartProgress } from "@/lib/progress";
 import FontSizer from "./FontSizer";
 
 export function Dots({ total, done, current }: { total: number; done: number; current?: number }) {
@@ -59,7 +59,7 @@ export default function ProblemPanel({
             <ol className="flex flex-col gap-2" style={{ fontSize: `${0.72 * fontScale}rem` }}>
               {hw.problems.map((p, i) => {
                 const pr = progress[p.id];
-                const done = pr?.fbd && pr?.equations;
+                const done = isDone(p, pr);
                 return (
                   <li key={p.id}>
                     <button
@@ -72,8 +72,9 @@ export default function ProblemPanel({
                       <span className="mb-0.5 flex items-center justify-between text-[1.12em] text-ink">
                         <span>problem {i + 1}</span>
                         {done && <span className="text-good">✓</span>}
-                        {!done && pr?.fbd && <span className="text-[0.9em] text-muted">diagram ✓</span>}
+                        {!done && hasDiagram(p) && pr?.fbd && <span className="text-[0.9em] text-muted">diagram ✓</span>}
                       </span>
+                      {p.topic && <span className="mb-0.5 block text-[0.85em] text-muted">{p.topic}{p.figures?.length ? " · has a figure" : ""}</span>}
                       {p.text}
                     </button>
                   </li>

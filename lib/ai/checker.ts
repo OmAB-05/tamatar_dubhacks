@@ -21,7 +21,8 @@ export type CheckInput = {
   signal: AbortSignal;
 };
 
-export type ExtractInput = { pdfBase64: string; signal: AbortSignal };
+export type UploadMediaType = "application/pdf" | "image/png" | "image/jpeg";
+export type ExtractInput = { base64: string; mediaType: UploadMediaType; signal: AbortSignal };
 
 export interface Checker {
   readonly provider: "anthropic" | "mock"; // "mock": dev-only eval checker, lib/ai/debug.ts

@@ -8,7 +8,7 @@ import { useStore } from "@/lib/store";
 
 /** Welcome: name input with popping letters, tomato watches you type (§4.1). */
 export default function Welcome() {
-  const { name: saved, setName } = useStore();
+  const { name: saved, setName, needsAccount, account, authReady } = useStore();
   const router = useRouter();
   const [name, setLocal] = useState("");
   const [focus, setFocus] = useState(false);
@@ -18,6 +18,10 @@ export default function Welcome() {
   useEffect(() => {
     if (saved) setLocal(saved);
   }, [saved]);
+  // With accounts on, your name comes from signing up.
+  useEffect(() => {
+    if (needsAccount && authReady && !account) router.replace("/login?mode=signup");
+  }, [needsAccount, authReady, account, router]);
   useEffect(() => input.current?.focus(), []);
 
   const go = () => {
