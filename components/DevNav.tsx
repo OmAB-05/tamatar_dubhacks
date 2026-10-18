@@ -13,6 +13,7 @@ const SCREENS = [
   ["/home", "home"],
   ["/solve/hw4", "solve"],
   ["/board/monday", "whiteboard"],
+  ["/team", "meet team"],
 ] as const;
 
 /** Dev-only screen switcher for reviewing the UI. Not rendered in production builds. */

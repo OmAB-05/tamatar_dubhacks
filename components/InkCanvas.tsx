@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { closedLoop, isCurvingBack } from "@/lib/circle";
 import { BOARD_H, BOARD_W, distToStroke, newId, strokePath } from "@/lib/ink";
 import type { Ink } from "@/lib/useInk";
@@ -23,6 +23,8 @@ type Props = {
   onStroke?: (s: Stroke) => void;
   /** Eraser touched the board at this point (board units). */
   onEraseAt?: (x: number, y: number) => void;
+  /** Fixed drawing under the ink (e.g. the ramp on the diagram board), in board units. */
+  background?: React.ReactNode;
   children?: React.ReactNode;
 };
 
@@ -31,21 +33,36 @@ const ERASE_RADIUS = 16;
 /**
  * The writing surface (ui_planning.md §3.3). Strokes render as SVG paths from
  * perfect-freehand, in logical board units, so the board scales without redrawing.
- * Pencil draws; mouse draws (dev); a finger draws only until a Pencil is seen.
- * Two-finger tap = undo, three-finger tap = redo.
+ * Pencil and mouse draw. A finger or palm never draws; two-finger tap = undo,
+ * three-finger tap = redo.
  */
 export default function InkCanvas({
   ink, tool = "pen", w = BOARD_W, h = BOARD_H, placeholder, className = "", grid = true,
-  onCircle, onStroke, onEraseAt, children,
+  onCircle, onStroke, onEraseAt, background, children,
 }: Props) {
   const svg = useRef<SVGSVGElement>(null);
   const live = useRef<SVGPathElement>(null);
   const pts = useRef<Point[] | null>(null);
   const activeId = useRef<number | null>(null);
-  const penSeen = useRef(false);
-  const penQuietUntil = useRef(0);
   const touches = useRef(new Map<number, { x: number; y: number }>());
   const gesture = useRef<{ max: number; t0: number; moved: boolean } | null>(null);
+  // iPad Safari: a Pencil drag also starts page scroll / text selection / the magnifier,
+  // which fires pointercancel and kills the stroke. Swallow touch defaults on the board.
+  useEffect(() => {
+    const el = svg.current;
+    if (!el) return;
+    const stop = (e: TouchEvent) => e.cancelable && e.preventDefault();
+    const opts = { passive: false } as const;
+    el.addEventListener("touchstart", stop, opts);
+    el.addEventListener("touchmove", stop, opts);
+    el.addEventListener("touchend", stop, opts);
+    return () => {
+      el.removeEventListener("touchstart", stop);
+      el.removeEventListener("touchmove", stop);
+      el.removeEventListener("touchend", stop);
+    };
+  }, []);
+
   const strokesRef = useRef(ink.strokes);
   strokesRef.current = ink.strokes;
 
@@ -74,6 +91,10 @@ export default function InkCanvas({
     return [((e.clientX - r.left) / r.width) * w, ((e.clientY - r.top) / r.height) * h, pressure];
   };
 
+  // Safari can report pressure 0 on the first Pencil sample; never draw a zero-width stroke.
+  const pressure = (ev: { pointerType: string; pressure: number }) =>
+    ev.pointerType === "pen" ? Math.max(0.15, ev.pressure || 0.5) : 0.5;
+
   const eraseAt = (p: Point) => {
     onEraseAt?.(p[0], p[1]);
     const hit = strokesRef.current.filter((s) => !erasing.has(s.id) && distToStroke(s, p[0], p[1]) < ERASE_RADIUS);
@@ -94,18 +115,13 @@ export default function InkCanvas({
       const n = touches.current.size;
       if (n === 1) gesture.current = { max: 1, t0: performance.now(), moved: false };
       else if (gesture.current) gesture.current.max = Math.max(gesture.current.max, n);
-      if (n > 1) return cancelStroke(); // multi-finger = gesture, never ink
-      // Palm rejection: ignore touches while / just after the Pencil is down.
-      if (performance.now() < penQuietUntil.current || penSeen.current) return;
-    }
-    if (e.pointerType === "pen") {
-      penSeen.current = true;
-      penQuietUntil.current = Infinity;
+      // Fingers and palms never ink; they only count toward undo/redo taps.
+      return;
     }
     if (activeId.current != null) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     activeId.current = e.pointerId;
-    const p = toBoard(e, e.pointerType === "pen" ? e.pressure : 0.5);
+    const p = toBoard(e, pressure(e));
     if (tool === "eraser") {
       erasedIds.current.clear();
       eraseAt(p);
@@ -127,7 +143,7 @@ export default function InkCanvas({
       return;
     }
     if (!pts.current) return;
-    for (const ev of events) pts.current.push(toBoard(ev, e.pointerType === "pen" ? ev.pressure : 0.5));
+    for (const ev of events) pts.current.push(toBoard(ev, pressure(ev)));
     live.current?.setAttribute("d", strokePath(pts.current, e.pointerType !== "pen"));
     const last = pts.current[pts.current.length - 1];
     const c = isCurvingBack(pts.current);
@@ -146,7 +162,6 @@ export default function InkCanvas({
         gesture.current = null;
       }
     }
-    if (e.pointerType === "pen") penQuietUntil.current = performance.now() + 300;
     if (activeId.current !== e.pointerId) return;
     activeId.current = null;
 
@@ -174,7 +189,10 @@ export default function InkCanvas({
   const empty = ink.strokes.length === 0 && !drawing;
 
   return (
-    <div className={`relative select-none ${grid ? "grid-paper" : "bg-white"} ${className}`} style={{ aspectRatio: `${w} / ${h}` }}>
+    <div
+      className={`relative select-none ${grid ? "grid-paper" : "bg-white"} ${className}`}
+      style={{ aspectRatio: `${w} / ${h}`, touchAction: "none", WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
+    >
       <svg
         ref={svg}
         viewBox={`0 0 ${w} ${h}`}
@@ -187,6 +205,7 @@ export default function InkCanvas({
         onPointerUp={up}
         onPointerCancel={up}
       >
+        {background}
         {ink.strokes.map((s) => (
           <path key={s.id} d={strokePath(s.points)} fill="var(--ink)" className={erasing.has(s.id) ? "ink-fade" : ""} />
         ))}

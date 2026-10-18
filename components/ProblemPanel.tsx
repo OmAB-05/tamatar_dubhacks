@@ -43,10 +43,10 @@ export default function ProblemPanel({
   return (
     <aside
       className="relative h-full shrink-0 overflow-hidden border-r-[1.5px] border-dashed border-rule bg-panel transition-[width] duration-300"
-      style={{ width: open ? 280 : 52, transitionTimingFunction: "var(--pop)" }}
+      style={{ width: open ? "14.6rem" : "2.7rem", transitionTimingFunction: "var(--pop)" }}
     >
       {open ? (
-        <div className="flex h-full w-[280px] flex-col gap-3 p-4">
+        <div className="flex h-full w-[14.6rem] flex-col gap-3 p-4">
           <div className="hand wa flex-1 overflow-auto bg-white p-3 shadow-[3px_4px_0_#f6d9d5]">
             <div className="mb-2 flex items-baseline justify-between text-[0.7rem] text-muted">
               <span>{hw.title}</span>
@@ -85,7 +85,7 @@ export default function ProblemPanel({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex h-full w-[52px] items-center justify-center text-[0.85rem] text-muted"
+          className="flex h-full w-[2.7rem] items-center justify-center text-[0.85rem] text-muted"
           aria-label="Show homework"
         >
           <span style={{ writingMode: "vertical-rl", transform: "rotate(180deg)" }}>Show homework →</span>
