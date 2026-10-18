@@ -4,8 +4,7 @@
 export type Member = { name: string; role: string; photo?: string; line?: string };
 
 export const TEAM: Member[] = [
-  { name: "teammate one", role: "UI + the tomato", photo: "/team/1.jpg" },
-  { name: "teammate two", role: "backend + red pen", photo: "/team/2.jpg" },
-  { name: "teammate three", role: "AI + handwriting", photo: "/team/3.jpg" },
-  { name: "teammate four", role: "voice + sound", photo: "/team/4.jpg" },
+  { name: "Rajvir Ajmani", role: "CEO", photo: "/team/rajvir.jpg" },
+  { name: "Saiom Patro", role: "CTO", photo: "/team/saiom.jpg" },
+  { name: "Arnav Bhattacharya", role: "COO", photo: "/team/arnav.jpg" },
 ];

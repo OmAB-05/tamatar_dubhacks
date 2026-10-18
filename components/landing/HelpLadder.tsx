@@ -29,7 +29,7 @@ export default function HelpLadder() {
           <div className="relative w-max">
             ma = mg cos θ − f
             <svg className="pointer-events-none absolute -inset-x-5 -inset-y-1 h-[calc(100%+8px)] w-[calc(100%+40px)] overflow-visible" viewBox="0 0 380 60" preserveAspectRatio="none" aria-hidden>
-              <path d={RING} pathLength={1} className="draw" fill="none" stroke="var(--tomato)" strokeWidth="3" strokeLinecap="round" vectorEffect="non-scaling-stroke" style={{ ["--dur" as string]: "600ms" }} />
+              <path d={RING} className="draw-px" fill="none" stroke="var(--tomato)" strokeWidth="3" strokeLinecap="round" vectorEffect="non-scaling-stroke" style={{ ["--dur" as string]: "600ms" }} />
             </svg>
           </div>
           <div className="red-note -mt-1 pl-16 text-[1.05rem] leading-none" style={{ rotate: "-3deg" }}>

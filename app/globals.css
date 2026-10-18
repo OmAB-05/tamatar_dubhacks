@@ -80,7 +80,7 @@ button { cursor: pointer; }
 .link { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px; background: none; border: 0; padding: 0; color: inherit; }
 
 /* ---------- Toast ---------- */
-.toast-host { position: fixed; left: 0; right: 0; bottom: 28px; display: flex; justify-content: center; pointer-events: none; z-index: 100; }
+.toast-host { position: fixed; left: 0; right: 0; bottom: 5.5rem; display: flex; justify-content: center; pointer-events: none; z-index: 100; }
 .toast { pointer-events: auto; font-size: 1rem; padding: .45em 1em; animation: drop-in 320ms var(--pop) both; touch-action: none; }
 
 /* ---------- Cards ---------- */
@@ -279,3 +279,8 @@ html { scroll-behavior: smooth; }
 @keyframes hero-drop { 0% { opacity: 0; transform: translateY(-60vh) scale(.6); } 60% { opacity: 1; transform: translateY(0) scale(1.06, .92); } 80% { transform: scale(.97, 1.04); } 100% { transform: none; } }
 @keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-18px) rotate(12deg); } }
 @keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+
+/* Draw-in for strokes with vector-effect: non-scaling-stroke. Those measure dashes in screen
+   px, so pathLength={1} + .draw would only draw a sliver. Dash longer than any on-screen path. */
+.draw-px { stroke-dasharray: 3000; stroke-dashoffset: 3000; animation: draw-px var(--dur, 550ms) var(--delay, 0ms) cubic-bezier(.4,.1,.3,1) forwards; }
+@keyframes draw-px { to { stroke-dashoffset: 0; } }

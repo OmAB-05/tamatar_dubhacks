@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { BOARD_H, BOARD_W } from "@/lib/ink";
 import { THINKING_COPY } from "@/lib/mock";
 import { normalizeForFont } from "@/lib/normalize";
@@ -18,7 +19,76 @@ type Props = {
   successText: string;
   onMarkTap: () => void;
   onCheckAgain: () => void;
+  /** Points already drawn on the board (ink, the ramp, pinned thumbnails), in board units.
+   *  The red-pen note is placed in empty space so it never covers any of them. */
+  obstacles?: [number, number][];
+  /** Where the hint / explanation / answer go. If set, they render there (e.g. the side panel)
+   *  and only the short red note sits on the board, so help never covers the work. */
+  helpSlot?: HTMLElement | null;
 };
+
+const NO_POINTS: [number, number][] = [];
+
+type Rect = { x: number; y: number; w: number; h: number };
+type Geo = { cx: number; cy: number; rx: number; ry: number };
+
+/**
+ * Find the emptiest spot for a w×h note: scan the board, count drawn points under each
+ * candidate (with a margin), never sit on the ring, and prefer spots close to the mistake.
+ */
+function placeNote(g: Geo, w: number, h: number, obstacles: [number, number][]): Rect {
+  const pad = 16;
+  const gap = 44; // room between note and ring for a readable arrow
+  const ring = { x: g.cx - g.rx - gap, y: g.cy - g.ry - gap, w: 2 * g.rx + 2 * gap, h: 2 * g.ry + 2 * gap };
+  const maxX = Math.max(8, BOARD_W - w - 8);
+  const maxY = Math.max(8, BOARD_H - h - 8);
+  let best: Rect = { x: 8, y: 8, w, h };
+  let bestScore = Infinity;
+  for (let y = 8; y <= maxY; y += 14) {
+    for (let x = 8; x <= maxX; x += 18) {
+      let hits = 0;
+      for (const [px, py] of obstacles) if (px > x - pad && px < x + w + pad && py > y - pad && py < y + h + pad) hits++;
+      const ox = Math.max(0, Math.min(x + w, ring.x + ring.w) - Math.max(x, ring.x));
+      const oy = Math.max(0, Math.min(y + h, ring.y + ring.h) - Math.max(y, ring.y));
+      const ax = Math.min(Math.max(g.cx, x), x + w);
+      const ay = Math.min(Math.max(g.cy, y), y + h);
+      const dx = ax - g.cx;
+      const dy = ay - g.cy;
+      // the connector arrow shouldn't cut across ink either
+      let crossed = 0;
+      const len = Math.hypot(dx, dy) || 1;
+      for (const [px, py] of obstacles) {
+        const t = Math.max(0, Math.min(1, ((px - g.cx) * dx + (py - g.cy) * dy) / (len * len)));
+        if (t > 0.05 && Math.hypot(g.cx + dx * t - px, g.cy + dy * t - py) < 12) crossed++;
+      }
+      const score = hits * 500 + crossed * 120 + ox * oy * 4 + len;
+      if (score < bestScore) {
+        bestScore = score;
+        best = { x, y, w, h };
+      }
+    }
+  }
+  return best;
+}
+
+/** Arrow from the note's nearest edge to the ring, ending in a small head. */
+function arrowPath(g: Geo, r: Rect) {
+  const ax = Math.min(Math.max(g.cx, r.x), r.x + r.w);
+  const ay = Math.min(Math.max(g.cy, r.y), r.y + r.h);
+  const t = Math.atan2(ay - g.cy, ax - g.cx);
+  const bx = g.cx + Math.cos(t) * (g.rx + 6);
+  const by = g.cy + Math.sin(t) * (g.ry + 6);
+  const len = Math.hypot(ax - bx, ay - by);
+  if (len < 28) return null;
+  const sx = ax + ((bx - ax) / len) * 8;
+  const sy = ay + ((by - ay) / len) * 8;
+  const mx = (sx + bx) / 2 + ((by - sy) / len) * 18;
+  const my = (sy + by) / 2 - ((bx - sx) / len) * 18;
+  const back = Math.atan2(by - my, bx - mx);
+  const h1 = `${bx - Math.cos(back - 0.45) * 16},${by - Math.sin(back - 0.45) * 16}`;
+  const h2 = `${bx - Math.cos(back + 0.45) * 16},${by - Math.sin(back + 0.45) * 16}`;
+  return `M${sx},${sy} Q${mx},${my} ${bx},${by} M${h1} L${bx},${by} L${h2}`;
+}
 
 /** Wobbly ellipse that overshoots its start, like a real pen loop (§3.5). */
 function ringPath(cx: number, cy: number, rx: number, ry: number) {
@@ -83,7 +153,7 @@ function Confetti() {
   );
 }
 
-export default function OverlayLayer({ result, resultKey, level, thinking, stale, dimmed, successText, onMarkTap, onCheckAgain }: Props) {
+export default function OverlayLayer({ result, resultKey, level, thinking, stale, dimmed, successText, onMarkTap, onCheckAgain, obstacles = NO_POINTS, helpSlot }: Props) {
   const [copyIdx, setCopyIdx] = useState(0);
   useEffect(() => {
     if (!thinking) return;
@@ -99,10 +169,7 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
     const cy = (b.y + b.h / 2) * BOARD_H;
     const rx = (b.w * BOARD_W) / 2 * 1.2 + 22;
     const ry = (b.h * BOARD_H) / 2 * 1.2 + 22;
-    const right = BOARD_W - (cx + rx);
-    const left = cx - rx;
-    const side: "left" | "right" = right >= left ? "right" : "left";
-    return { cx, cy, rx, ry, side, path: ringPath(cx, cy, rx, ry) };
+    return { cx, cy, rx, ry, path: ringPath(cx, cy, rx, ry) };
     // resultKey re-rolls the ring shape for each new check
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [result, resultKey]);
@@ -111,16 +178,46 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
   const markText = result?.mark ? normalizeForFont(result.mark) : "";
   const pct = (v: number, of: number) => `${(v / of) * 100}%`;
 
-  // Note column sits outside the ring on the side with more room.
-  const col =
-    geo &&
-    (geo.side === "right"
-      ? { left: pct(geo.cx + geo.rx + 46, BOARD_W) }
-      : { right: pct(BOARD_W - (geo.cx - geo.rx - 46), BOARD_W) });
-  const colTop = geo ? pct(Math.max(12, Math.min(geo.cy - 60, BOARD_H * 0.55)), BOARD_H) : "0";
+  // Measure the note column, then park it in the emptiest spot near the ring.
+  const root = useRef<HTMLDivElement>(null);
+  const colRef = useRef<HTMLDivElement>(null);
+  const [note, setNote] = useState<Rect | null>(null);
+  useLayoutEffect(() => {
+    const el = colRef.current;
+    const box = root.current;
+    if (!geo || !el || !box || !box.clientWidth) return setNote(null);
+    const unit = BOARD_W / box.clientWidth;
+    setNote(placeNote(geo, el.offsetWidth * unit, el.offsetHeight * unit, obstacles));
+  }, [geo, level, obstacles]);
+  const arrow = geo && note && markText ? arrowPath(geo, note) : null;
+
+  const help = wrong ? (
+    <div key={`help-${resultKey}`} className="flex w-full flex-col items-start gap-2">
+      {level >= 1 && result?.hint && (
+        <div className="sticky-note sticky-drop pointer-events-auto max-w-full text-left text-[0.85rem] leading-snug" style={{ rotate: "2deg" }}>
+          {normalizeForFont(result.hint)}
+          {level >= 2 && result.explanation && (
+            <div className="mt-2 border-t border-dashed border-[rgba(31,26,23,.2)] pt-2 text-ink-2">
+              <Explained text={normalizeForFont(result.explanation)} />
+            </div>
+          )}
+        </div>
+      )}
+      {level >= 3 && result?.fullSolution && (
+        <div className="solution slide-in pointer-events-auto max-h-[46vh] w-full overflow-auto border-[2px] border-[rgba(31,26,23,.7)] text-left text-[0.8rem] text-ink wb">
+          <div className="text-[0.7rem] text-tomato">full solution</div>
+          {normalizeForFont(result.fullSolution)
+            .split("\n")
+            .map((l, i) => (
+              <div key={i}>{l}</div>
+            ))}
+        </div>
+      )}
+    </div>
+  ) : null;
 
   return (
-    <div className="pointer-events-none absolute inset-0" aria-live="polite">
+    <div ref={root} className="pointer-events-none absolute inset-0" aria-live="polite">
       <svg viewBox={`0 0 ${BOARD_W} ${BOARD_H}`} className="absolute inset-0 h-full w-full overflow-visible">
         {thinking && (
           <rect x="6" y="6" width={BOARD_W - 12} height={BOARD_H - 12} rx="18" fill="none" stroke="var(--tomato-2)" strokeWidth="3" className="thinking-border" />
@@ -139,32 +236,37 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
             />
             {/* fat invisible hit area: tap the ring to open help */}
             <path d={geo.path} fill="none" stroke="transparent" strokeWidth="28" className="pointer-events-auto cursor-pointer" onClick={onMarkTap} />
-            {markText && (
+            {arrow && (
               <path
-                d={
-                  geo.side === "right"
-                    ? `M${geo.cx + geo.rx + 42},${Math.max(30, geo.cy - 40)} Q${geo.cx + geo.rx + 20},${geo.cy - 26} ${geo.cx + geo.rx + 6},${geo.cy - 6} M${geo.cx + geo.rx + 6},${geo.cy - 6} l2,-14 M${geo.cx + geo.rx + 6},${geo.cy - 6} l13,-5`
-                    : `M${geo.cx - geo.rx - 42},${Math.max(30, geo.cy - 40)} Q${geo.cx - geo.rx - 20},${geo.cy - 26} ${geo.cx - geo.rx - 6},${geo.cy - 6} M${geo.cx - geo.rx - 6},${geo.cy - 6} l-2,-14 M${geo.cx - geo.rx - 6},${geo.cy - 6} l-13,-5`
-                }
+                key={arrow}
+                d={arrow}
                 pathLength={1}
                 fill="none"
                 stroke="var(--tomato)"
                 strokeWidth="4"
                 strokeLinecap="round"
+                strokeLinejoin="round"
                 className="draw"
-                style={{ ["--dur" as string]: "200ms", ["--delay" as string]: `${700 + markText.length * 25}ms` }}
+                style={{ ["--dur" as string]: "250ms", ["--delay" as string]: `${700 + markText.length * 25}ms` }}
               />
             )}
           </g>
         )}
       </svg>
 
-      {/* Note + help reveals, outside the ring, never over the ring itself */}
-      {wrong && geo && col && (
+      {/* Note + help reveals, in empty space: never over the ring, the ink or the drawing */}
+      {wrong && geo && (
         <div
           key={`col-${resultKey}`}
-          className={`absolute flex w-[34%] flex-col gap-2 ${geo.side === "left" ? "items-end text-right" : "items-start"}`}
-          style={{ ...col, top: colTop, opacity: dimmed ? 0.3 : 1, transition: "opacity 200ms" }}
+          ref={colRef}
+          className="absolute flex w-max max-w-[32%] flex-col items-start gap-2"
+          style={{
+            left: pct(note?.x ?? 0, BOARD_W),
+            top: pct(note?.y ?? 0, BOARD_H),
+            visibility: note ? "visible" : "hidden",
+            opacity: dimmed ? 0.3 : 1,
+            transition: "opacity 200ms, left 300ms var(--pop), top 300ms var(--pop)",
+          }}
         >
           {markText && (
             <button
@@ -182,26 +284,7 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
               {markText}
             </button>
           )}
-          {level >= 1 && result?.hint && (
-            <div className="sticky-note sticky-drop pointer-events-auto max-w-full text-left text-[0.85rem] leading-snug" style={{ rotate: "2deg" }}>
-              {normalizeForFont(result.hint)}
-              {level >= 2 && result.explanation && (
-                <div className="mt-2 border-t border-dashed border-[rgba(31,26,23,.2)] pt-2 text-ink-2">
-                  <Explained text={normalizeForFont(result.explanation)} />
-                </div>
-              )}
-            </div>
-          )}
-          {level >= 3 && result?.fullSolution && (
-            <div className="solution slide-in pointer-events-auto max-h-[46vh] w-full overflow-auto border-[2px] border-[rgba(31,26,23,.7)] text-left text-[0.8rem] text-ink wb">
-              <div className="text-[0.7rem] text-tomato">full solution</div>
-              {normalizeForFont(result.fullSolution)
-                .split("\n")
-                .map((l, i) => (
-                  <div key={i}>{l}</div>
-                ))}
-            </div>
-          )}
+          {!helpSlot && help}
         </div>
       )}
 
@@ -237,6 +320,8 @@ export default function OverlayLayer({ result, resultKey, level, thinking, stale
           </div>
         </div>
       )}
+
+      {helpSlot && help && level >= 1 && createPortal(help, helpSlot)}
 
       {thinking && (
         <div className="sticky-note sticky-drop absolute right-4 top-4 flex items-center gap-2 text-[0.85rem]">
