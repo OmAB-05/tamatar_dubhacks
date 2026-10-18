@@ -39,7 +39,7 @@ export default function Team() {
           meet the team
         </h1>
         <p className="mb-10 text-center text-[1.1rem] text-ink-2">the people who taught a tomato physics</p>
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className="mx-auto grid max-w-[52rem] grid-cols-1 gap-10 sm:grid-cols-3">
           {TEAM.map((m, i) => (
             <div key={i} className="text-center" style={{ animation: `deal-in 500ms var(--pop) ${i * 90}ms both`, rotate: `${[-1.5, 1, -0.5, 1.5][i % 4]}deg` }}>
               <Photo m={m} i={i} />
