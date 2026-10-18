@@ -1,10 +1,11 @@
-// Meet Team. Drop photos in public/team/ and point `photo` at them (square works best).
-// Until a photo exists, the card shows a hand-drawn frame instead.
+// Meet Team: one group photo (public/team/team.jpg, metadata stripped) and the people in it.
 
-export type Member = { name: string; role: string; photo?: string; line?: string };
+export type Member = { name: string; role: string };
+
+export const TEAM_PHOTO = "/team/team.jpg";
 
 export const TEAM: Member[] = [
-  { name: "Rajvir Ajmani", role: "CEO", photo: "/team/rajvir.jpg" },
-  { name: "Saiom Patro", role: "CTO", photo: "/team/saiom.jpg" },
-  { name: "Arnav Bhattacharya", role: "COO", photo: "/team/arnav.jpg" },
+  { name: "Rajvir Ajmani", role: "CEO" },
+  { name: "Arnav Bhattacharya", role: "COO" },
+  { name: "Saiom Patro", role: "CTO" },
 ];
