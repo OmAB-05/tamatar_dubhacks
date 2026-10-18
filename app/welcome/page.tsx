@@ -6,7 +6,7 @@ import Button from "@/components/Button";
 import Tomato from "@/components/Tomato";
 import { useStore } from "@/lib/store";
 
-/** Welcome: name input with popping letters, tomato watches you type (§4.1). */
+/** Welcome: name input with popping letters, tamatar watches you type (§4.1). */
 export default function Welcome() {
   const { name: saved, setName, needsAccount, account, authReady } = useStore();
   const router = useRouter();
@@ -74,7 +74,7 @@ export default function Welcome() {
         </div>
       </div>
 
-      {/* the tomato gets the whole right half and watches you type */}
+      {/* the tamatar gets the whole right half and watches you type */}
       <div className="hidden items-center justify-center md:flex">
         <div style={{ animation: "hero-drop 900ms var(--pop) both" }}>
           <Tomato cssSize="min(44vw, 78dvh)" bubbleClass="text-[1.6rem]" />

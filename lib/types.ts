@@ -65,7 +65,7 @@ export type CheckResponse = {
   hint: string | null; // level 1
   explanation: string | null; // level 2
   fullSolution: string | null; // level 3
-  errorKey: string | null; // stable id for the mistake, used by the tomato
+  errorKey: string | null; // stable id for the mistake, used by the tamatar
 };
 
 // ---------- Extract ----------

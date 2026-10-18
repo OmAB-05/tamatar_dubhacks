@@ -15,6 +15,7 @@ import type { TomatoState } from "@/lib/types";
 import Button from "@/components/Button";
 import ProgressBar from "@/components/ProgressBar";
 import StrokeThumb from "@/components/StrokeThumb";
+import QuoteLine from "@/components/QuoteLine";
 import Tomato from "@/components/Tomato";
 import Topbar from "@/components/Topbar";
 
@@ -99,6 +100,7 @@ export default function Home() {
             <p className="mt-2 text-[1.25rem] text-ink-2" aria-live="polite">
               {STATUS_LINES[tomato.state]}
             </p>
+            <QuoteLine className="mt-2 text-[1.15rem]" />
           </div>
         </section>
 

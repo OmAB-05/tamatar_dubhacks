@@ -1,4 +1,4 @@
-// Tomato voice (delight.md §5). ElevenLabs plugs in here: set NEXT_PUBLIC_VOICE=1 and add an
+// Tamatar voice (delight.md §5). ElevenLabs plugs in here: set NEXT_PUBLIC_VOICE=1 and add an
 // /api/speak route that takes { text } and returns audio (the key stays server-side).
 // Until then this is a silent no-op, so every caller can already "speak".
 

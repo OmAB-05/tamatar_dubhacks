@@ -148,7 +148,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
       } else {
         store.setProgress(problem.id, { fbd: true, equations: true });
         const finished = doneCount + 1 >= hw.problems.length;
-        setTimeout(() => store.toast(finished ? "homework done! export it as a PDF" : "your tomato perked right up"), 1400);
+        setTimeout(() => store.toast(finished ? "homework done! export it as a PDF" : "your tamatar perked right up"), 1400);
       }
     },
     [chk, ink.strokes, part, store, problem.id, prog, doneCount, hw.problems.length],
@@ -349,7 +349,7 @@ export default function Solve({ params }: { params: { hw: string } }) {
                     <StrokeThumb strokes={fbdInk.strokes} underlay={underlay} className="h-full w-full" />
                   </button>
                 )}
-                {/* the tomato peeks in from the corner during feedback */}
+                {/* the tamatar peeks in from the corner during feedback */}
                 <div
                   className="absolute -right-5 -top-5 z-10 transition-transform duration-500"
                   style={{ transform: feedback ? "translate(0,0) rotate(-8deg)" : "translate(30px, 40px) rotate(10deg) scale(.6)", opacity: feedback ? 1 : 0, transitionTimingFunction: "var(--pop)" }}
