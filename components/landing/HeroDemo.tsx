@@ -7,7 +7,7 @@ import { arrow, penLoop, useStage } from "./useStage";
 
 // A scripted replay of the hero moment (ui_planning.md §3.4–3.5): a student draws a
 // free-body diagram with the normal force pointing straight up, taps Check, the red pen
-// circles it, they fix it, and the tomato cheers. Loops forever.
+// circles it, they fix it, and the tamatar cheers. Loops forever.
 
 const W = 560;
 const H = 470;
@@ -215,7 +215,7 @@ export default function HeroDemo() {
         </div>
       </div>
 
-      {/* the tomato peeks over the corner of the page */}
+      {/* the tamatar peeks over the corner of the page */}
       <div className="absolute -bottom-9 -right-4 sm:-right-9">
         <Tomato size={104} state={wrong ? 1 : 0} />
       </div>

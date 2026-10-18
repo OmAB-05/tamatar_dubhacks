@@ -14,6 +14,7 @@ const SCREENS = [
   ["/solve/hw4", "solve"],
   ["/board/monday", "whiteboard"],
   ["/team", "meet team"],
+  ["/calendar", "calendar"],
 ] as const;
 
 /** Dev-only screen switcher for reviewing the UI. Not rendered in production builds. */
@@ -29,7 +30,7 @@ export default function DevNav() {
               {label}
             </Link>
           ))}
-          <div className="mt-1 border-t border-dashed border-rule pt-2 text-muted">tomato</div>
+          <div className="mt-1 border-t border-dashed border-rule pt-2 text-muted">tamatar</div>
           <div className="flex gap-1">
             {[0, 1, 2, 3].map((s) => (
               <button key={s} type="button" onClick={() => setTomatoState(s as TomatoState)} className={`h-8 flex-1 rounded border border-rule ${tomato.state === s ? "bg-blush" : ""}`}>

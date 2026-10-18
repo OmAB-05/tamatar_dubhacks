@@ -15,7 +15,7 @@ export const CheckRequestSchema = z.object({
 
 // ---------- Error keys ----------
 
-// Stable ids the tomato state machine keys on. Add new ones here (and tell the UI)
+// Stable ids the tamatar state machine keys on. Add new ones here (and tell the UI)
 // rather than letting the model invent free-form keys.
 export const ERROR_KEYS = [
   // Part A — free-body diagram

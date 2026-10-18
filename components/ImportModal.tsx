@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { extractProblems, UPLOAD_TYPES } from "@/lib/api";
+import { isoOf } from "@/lib/due";
 import { cropFigures } from "@/lib/figures";
 import { useStore } from "@/lib/store";
 import type { Problem } from "@/lib/types";
@@ -12,10 +13,7 @@ import Modal from "./Modal";
 import Tomato from "./Tomato";
 
 /** Today in the student's own time zone, as YYYY-MM-DD (what <input type="date"> uses). */
-const localToday = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
+const localToday = () => isoOf(new Date());
 
 /** "2026-10-24" → "due Sat, Oct 24" (parsed as a local calendar day, not UTC midnight). */
 const dueLabel = (date: string) => {
@@ -168,7 +166,9 @@ export default function ImportModal({ onClose }: { onClose: () => void }) {
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="hand wa bg-white px-3 py-1 text-[1rem] outline-none focus:border-tomato"
+                aria-label="due date"
               />
+              {dueDate && <span className="text-[0.8rem] text-muted">{"it'll show up on your calendar"}</span>}
             </label>
           )}
           <div className="mt-5 flex justify-between">

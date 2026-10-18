@@ -41,7 +41,7 @@ export default function Landing() {
 
       <Topbar floating />
 
-      {/* meet tamatar: the first screen is just the tomato */}
+      {/* meet tamatar: the first screen is just the tamatar */}
       <MeetTamatar />
 
       {/* pitch */}
@@ -123,11 +123,11 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* the tomato */}
-      <section id="tomato" className="lp-band relative scroll-mt-6 py-24">
+      {/* the tamatar */}
+      <section id="tamatar" className="lp-band relative scroll-mt-6 py-24">
         <div className="mx-auto grid max-w-[1180px] items-center gap-12 px-4 sm:px-10 lg:grid-cols-[1fr_1.2fr]">
           <Reveal>
-            <SectionHead kicker="the tomato" title="meet your tomato." />
+            <SectionHead kicker="the tamatar" title="meet your tamatar." />
             <p className="mt-4 max-w-[480px] text-[1.05rem] leading-snug text-ink-2">
               It lives in the corner of every page and watches you write. Right answers keep it fresh. Make the same mistake twice and it starts to rot. One right answer and it perks back up.
             </p>
@@ -182,7 +182,7 @@ export default function Landing() {
       <footer className="relative mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-6 gap-y-2 px-4 py-10 text-[0.8rem] text-muted sm:px-10">
         <img src="/logo.png" alt="" width={28} height={30} />
         <span>tamatar.si, made in one night at DubHacks</span>
-        <span className="sm:ml-auto">no tomatoes were harmed. some were bruised.</span>
+        <span className="sm:ml-auto">no tamatars were harmed. some were bruised.</span>
       </footer>
     </div>
   );

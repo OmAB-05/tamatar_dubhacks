@@ -11,7 +11,7 @@ const STATES: { label: string; line: string }[] = [
   { label: "rotten", line: "flies. drama. one right answer helps." },
 ];
 
-/** Poke the tomato; slide it through its rot states (ui_planning.md §4.2 card 4). */
+/** Poke the tamatar; slide it through its rot states (ui_planning.md §4.2 card 4). */
 export default function TomatoPlayground() {
   const [s, setS] = useState<TomatoState>(0);
   const [pokes, setPokes] = useState(0);
@@ -48,7 +48,7 @@ export default function TomatoPlayground() {
           value={s}
           onChange={(e) => setS(Number(e.target.value) as TomatoState)}
           className="lp-range w-full"
-          aria-label="how rotten is the tomato"
+          aria-label="how rotten is the tamatar"
         />
         <p className="mt-3 min-h-[2.6em] text-[1rem] text-ink-2" aria-live="polite">
           {STATES[s].line}

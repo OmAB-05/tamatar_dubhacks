@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { dueLabel } from "@/lib/due";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Homework } from "@/data/problems";
@@ -14,6 +15,7 @@ import type { TomatoState } from "@/lib/types";
 import Button from "@/components/Button";
 import ProgressBar from "@/components/ProgressBar";
 import StrokeThumb from "@/components/StrokeThumb";
+import QuoteLine from "@/components/QuoteLine";
 import Tomato from "@/components/Tomato";
 import Topbar from "@/components/Topbar";
 
@@ -66,7 +68,7 @@ export default function Home() {
                   <div className="mt-1 text-[0.8rem] text-ink-2">
                     {hw.course} · {total} problem{total === 1 ? "" : "s"}
                     {figures ? ` · ${figures} figure${figures === 1 ? "" : "s"}` : ""}
-                    {hw.due ? ` · ${hw.due}` : ""}
+                    {dueLabel(hw) ? ` · ${dueLabel(hw)}` : ""}
                   </div>
                   <ProgressBar fraction={fraction} label={`${hw.title} progress`} className="mt-3" />
                   <div className="mt-1 text-[1rem]">{status}</div>
@@ -98,6 +100,7 @@ export default function Home() {
             <p className="mt-2 text-[1.25rem] text-ink-2" aria-live="polite">
               {STATUS_LINES[tomato.state]}
             </p>
+            <QuoteLine className="mt-2 text-[1.15rem]" />
           </div>
         </section>
 

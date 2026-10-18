@@ -15,7 +15,7 @@ const MOUTH = [
 ];
 
 type Props = {
-  /** Defaults to the shared tomato state from the store. */
+  /** Defaults to the shared tamatar state from the store. */
   state?: TomatoState;
   /** px at the 24px design root; rendered in rem so it follows the UI scale. */
   size?: number;
@@ -33,11 +33,11 @@ type Props = {
   /** Animate the mouth while the explanation audio is playing. */
   speaking?: boolean;
   onTap?: () => void;
-  /** Gets each line the tomato says. When set, the page shows the line itself (no bubble). */
+  /** Gets each line the tamatar says. When set, the page shows the line itself (no bubble). */
   onSay?: (line: string) => void;
 };
 
-/** The tomato character (ui_planning.md §3.8, delight.md §3). */
+/** The tamatar character (ui_planning.md §3.8, delight.md §3). */
 export default function Tomato({
   state, size = 96, cssSize, bubbleClass = "text-[0.85rem]", interactive = true, listen = true, track = true, className = "", speaking = false, onTap, onSay,
 }: Props) {
@@ -56,7 +56,7 @@ export default function Tomato({
   useEffect(() => setBlink(`${(4 + Math.random() * 3).toFixed(2)}s`), []);
   const bubbleTimer = useRef<ReturnType<typeof setTimeout>>();
   const bubbleEl = useRef<HTMLDivElement>(null);
-  // Nudge the bubble so it stays on screen when the tomato sits near an edge.
+  // Nudge the bubble so it stays on screen when the tamatar sits near an edge.
   const [fit, setFit] = useState({ dx: 0, below: false });
 
   useLayoutEffect(() => {
@@ -88,7 +88,7 @@ export default function Tomato({
         const dx = e.clientX - (r.left + r.width / 2);
         const dy = e.clientY - (r.top + r.height * 0.55);
         const d = Math.hypot(dx, dy) || 1;
-        // Reaches full look within ~a tomato's width, so even small moves show.
+        // Reaches full look within ~a tamatar's width, so even small moves show.
         const k = Math.min(1, d / Math.max(60, r.width * 0.9));
         const ux = (dx / d) * k;
         const uy = (dy / d) * k;
@@ -152,7 +152,7 @@ export default function Tomato({
         ref={body}
         className="tomato"
         role={interactive ? "button" : "img"}
-        aria-label={`your tomato: ${STATUS_LINES[s]}`}
+        aria-label={`your tamatar: ${STATUS_LINES[s]}`}
         onPointerDown={tap}
         style={{ cursor: interactive ? "pointer" : "default", transition: "transform 300ms var(--pop)", ["--blink" as string]: blink }}
       >

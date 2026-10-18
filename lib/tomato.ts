@@ -5,11 +5,31 @@ export type TomatoMemory = { state: TomatoState; lastErrorKey: string | null };
 export type TomatoReactionKind = "jump" | "flinch" | "rot" | "squish" | "lean";
 
 export const STATUS_LINES: Record<TomatoState, string> = {
-  0: "your tomato is looking fresh today",
-  1: "your tomato is looking a little sad",
-  2: "your tomato needs some right answers",
-  3: "your tomato has seen better days",
+  0: "your tamatar is looking fresh today",
+  1: "your tamatar is looking a little sad",
+  2: "your tamatar needs some right answers",
+  3: "your tamatar has seen better days",
 };
+
+/** Things tamatar says at random: on the home pages and when you poke it. Hand-written, no AI. */
+export const QUOTES = [
+  "are you a dodo",
+  "I am going to paint you red",
+  "good morning Mr. Missed his lecture",
+  "lowkey highkey stop",
+  "normal force goes out of the ramp. always.",
+  "sin or cos? think before you write",
+  "circle it like you mean it",
+  "i have seen your free-body diagrams",
+  "units. please. i'm begging.",
+  "arre, mg sin θ, not mg cos θ",
+  "one more slip and i start to rot",
+  "start the arrow on the block, not the moon",
+  "the red pen is warming up",
+  "friction always fights back",
+  "shabash! now do the next one",
+  "your TA would be proud. probably.",
+];
 
 export const TAP_LINES = [
   "hehe, that tickles",
@@ -17,7 +37,15 @@ export const TAP_LINES = [
   "ready when you are",
   "arre, careful with the pen",
   "poke me after you circle something",
+  ...QUOTES,
 ];
+
+/** A random quote that isn't `prev`. */
+export function randomQuote(prev?: string) {
+  let q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  while (q === prev) q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  return q;
+}
 
 const clamp = (n: number) => Math.max(0, Math.min(3, n)) as TomatoState;
 

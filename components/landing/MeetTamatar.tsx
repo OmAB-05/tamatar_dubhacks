@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import Tomato from "@/components/Tomato";
 import { useStore } from "@/lib/store";
 
-const HELLOS = ["hi, i'm tamatar!", "welcome to tamatar.si", "poke me, i don't bite", "scroll down, i'll wait"];
+import { QUOTES } from "@/lib/tomato";
+
+// greetings first, then tamatar's quotes mixed in
+const HELLOS = ["hi, i'm tamatar!", "welcome to tamatar.si", ...QUOTES.slice(0, 4), "poke me, i don't bite", ...QUOTES.slice(4), "scroll down, i'll wait"];
 
 const DOODLES = [
   { x: "8%", y: "22%", d: "M0 10 L6 16 L18 2", c: "var(--good)", t: 7 },
@@ -15,7 +18,7 @@ const DOODLES = [
   { x: "70%", y: "86%", d: "M0 10 L6 16 L18 2", c: "var(--good)", t: 9.5 },
 ];
 
-/** Meet Tamatar: the whole first screen is the tomato. Tap it, it talks back. */
+/** Meet Tamatar: the whole first screen is the tamatar. Tap it, it talks back. */
 export default function MeetTamatar() {
   const { react } = useStore();
   const [i, setI] = useState(0);
@@ -49,7 +52,7 @@ export default function MeetTamatar() {
           </svg>
         ))}
       </div>
-      {/* the heading is the tomato's voice: tap it and it answers here */}
+      {/* the heading is the tamatar's voice: tap it and it answers here */}
       <h1
         key={said ? `s${said.n}` : i}
         className={`write-in mb-2 text-center ${said ? "text-tomato" : "text-ink"}`}
@@ -61,7 +64,7 @@ export default function MeetTamatar() {
         <Tomato cssSize="min(56dvh, 80vw)" onSay={(line) => setSaid((p) => ({ line, n: (p?.n ?? 0) + 1 }))} />
       </div>
       <a href="#about" className="mt-2 flex flex-col items-center text-[1rem] text-muted" style={{ animation: "nudge 1.8s ease-in-out infinite" }}>
-        tap the tomato · then scroll
+        tap the tamatar · then scroll
         <svg width="26" height="20" viewBox="0 0 26 20" aria-hidden>
           <path d="M3 5 L13 15 L23 5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
