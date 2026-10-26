@@ -38,9 +38,7 @@ export function Wordmark() {
 
 const NAV = [
   { href: "/", label: "Home" },
-  { href: "/home", label: "My homework" },
-  { href: "/calendar", label: "Calendar" },
-  { href: "/tour", label: "Tutorial" },
+  { href: "/#how", label: "How it works" },
   { href: "/#meet", label: "Meet Tamatar" },
   { href: "/team", label: "Meet Team" },
 ];
@@ -67,6 +65,7 @@ export default function Topbar({ children, floating = false }: { children?: Reac
   const { streak, saveBoard, account, signOut, toast, homework, progress, name } = useStore();
   const router = useRouter();
   const path = usePathname();
+  const waitlistOnly = floating || path === "/team";
   const [menu, setMenu] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -139,13 +138,13 @@ export default function Topbar({ children, floating = false }: { children?: Reac
         )}
       </div>
       <div className="min-w-0 flex-1">{children}</div>
-      <div className="hidden items-center gap-1 text-[0.9rem] text-ink-2 lg:flex" title={`${streak} day streak`}>
+      {!waitlistOnly && <div className="hidden items-center gap-1 text-[0.9rem] text-ink-2 lg:flex" title={`${streak} day streak`}>
         <Tomato size={34} track={false} />
         {streak}
-      </div>
-      {floating ? (
-        <Link href="/home" className="btn btn-red wc !text-[1rem]">
-          start writing
+      </div>}
+      {waitlistOnly ? (
+        <Link href="/#waitlist" className="btn btn-red wc !text-[1rem]">
+          join the waitlist
         </Link>
       ) : (
       <>

@@ -5,6 +5,7 @@ import Tomato from "@/components/Tomato";
 import { useStore } from "@/lib/store";
 
 import { QUOTES } from "@/lib/tomato";
+import WaitlistForm from "./WaitlistForm";
 
 // greetings first, then tamatar's quotes mixed in
 const HELLOS = ["hi, i'm tamatar!", "welcome to tamatar.si", ...QUOTES.slice(0, 4), "poke me, i don't bite", ...QUOTES.slice(4), "scroll down, i'll wait"];
@@ -37,7 +38,7 @@ export default function MeetTamatar() {
   }, [react]);
 
   return (
-    <section id="meet" className="relative flex h-[100dvh] flex-col items-center justify-center overflow-hidden px-4 pt-[3.4rem]">
+    <section id="meet" className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-4 pb-8 pt-[4.5rem]">
       <div aria-hidden className="pointer-events-none absolute inset-0">
         {DOODLES.map((b, n) => (
           <svg
@@ -61,10 +62,11 @@ export default function MeetTamatar() {
         {said?.line ?? HELLOS[i]}
       </h1>
       <div style={{ animation: "hero-drop 900ms var(--pop) both" }}>
-        <Tomato cssSize="min(56dvh, 80vw)" onSay={(line) => setSaid((p) => ({ line, n: (p?.n ?? 0) + 1 }))} />
+        <Tomato cssSize="min(34dvh, 55vw)" onSay={(line) => setSaid((p) => ({ line, n: (p?.n ?? 0) + 1 }))} />
       </div>
-      <a href="#about" className="mt-2 flex flex-col items-center text-[1rem] text-muted" style={{ animation: "nudge 1.8s ease-in-out infinite" }}>
-        tap the tamatar · then scroll
+      <WaitlistForm />
+      <a href="#about" className="mt-6 flex flex-col items-center text-[0.85rem] text-muted">
+        see what&rsquo;s growing
         <svg width="26" height="20" viewBox="0 0 26 20" aria-hidden>
           <path d="M3 5 L13 15 L23 5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
         </svg>

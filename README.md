@@ -18,6 +18,23 @@ Write naturally. Find the first mistake. Keep learning.
 
 ## The idea
 
+### Waitlist launch
+
+The public site collects email-only early-access signups. Notebook pages redirect to
+`/#waitlist`; all app APIs are closed except `POST /api/waitlist`. Signing up does
+not unlock the app. The landing page and team page remain public.
+
+Apply `supabase/migrations/20261027000000_waitlist.sql` to the existing Supabase
+project and configure `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the deployment environment. Signups live
+in `public.waitlist` with a unique normalized email and creation timestamp. Public
+roles can only call the insert-only `join_waitlist` function; they cannot read,
+update, or delete the list. Duplicate signups return the same success response.
+
+Run `npm run test:waitlist` to check the access wall, input validation, and storage
+success/error handling. To reopen the notebook at launch, remove the route wall in
+`middleware.ts` and restore app navigation and calls to action.
+
 You fill a page with arrows, equations, and crossed-out calculations. The answer key tells you that you're wrong. It doesn't tell you where your reasoning went off track.
 
 **tamatar brings a teaching assistant's red pen to your own handwriting.** Draw a free-body diagram and solve a physics problem on an iPad. Press **Check**, and the tutor looks for the first incorrect step, circles the relevant ink, and offers just as much help as you want.

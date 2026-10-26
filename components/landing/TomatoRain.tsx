@@ -47,11 +47,11 @@ export default function TomatoRain() {
       </div>
 
       <h2 className="mt-8 leading-none" style={{ fontSize: "clamp(36px, 5vw, 60px)" }}>
-        your tamatar is waiting.
+        good things take time to ripen.
       </h2>
       <p className="mt-3 max-w-[520px] text-[1.05rem] text-ink-2">Bring a ramp problem. Bring a Pencil. Bring a bit of patience for a dramatic vegetable.</p>
-      <Link href="/home" className="btn btn-red wa lp-cta mt-7 !min-h-[60px] !px-9 !text-[1.4rem]">
-        open the notebook →
+      <Link href="/#waitlist" className="btn btn-red wa lp-cta mt-7 !min-h-[60px] !px-9 !text-[1.4rem]">
+        join the waitlist →
       </Link>
       <p className="mt-3 text-[0.75rem] text-muted">works best on iPad with Apple Pencil. a mouse is fine too.</p>
     </div>

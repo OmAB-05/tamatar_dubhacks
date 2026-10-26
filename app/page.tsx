@@ -61,8 +61,8 @@ export default function Landing() {
             Write your work with a Pencil, like it&rsquo;s paper. Circle your answer. tamatar&rsquo;s red pen finds the <span className="hl">first slip</span> and helps just enough for you to fix it yourself.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-5">
-            <Link href="/home" className="btn btn-red wa lp-cta !min-h-[60px] !px-8 !text-[1.35rem]">
-              start writing →
+            <Link href="/#waitlist" className="btn btn-red wa lp-cta !min-h-[60px] !px-8 !text-[1.35rem]">
+              join the waitlist →
             </Link>
             <a href="#how" className="link text-[1rem] text-ink-2">
               or see how it works
